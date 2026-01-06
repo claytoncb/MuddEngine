@@ -1,0 +1,9 @@
+{
+    "sprite":[
+        {
+            "section":"PlayerHead",
+            "animation":null,
+            "offset":[16,16]
+        }
+    ]
+}

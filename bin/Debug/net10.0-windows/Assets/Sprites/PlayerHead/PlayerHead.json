@@ -1,0 +1,25 @@
+{ "frames": [
+   {
+    "frame": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "rotation":0
+   },
+   {
+    "frame": { "x": 32, "y": 0, "w": 32, "h": 32 },
+    "rotation":1
+   },
+   {
+    "frame": { "x": 64, "y": 0, "w": 32, "h": 32 },
+    "rotation":2
+   },
+   {
+    "frame": { "x": 96, "y": 0, "w": 32, "h": 32 },
+    "rotation":3
+   }
+ ],
+ "meta": {
+  "image": "PlayerHead.png",
+  "format": "RGBA8888",
+  "size": { "w": 128, "h": 32 },
+  "scale": "1"
+ }
+}

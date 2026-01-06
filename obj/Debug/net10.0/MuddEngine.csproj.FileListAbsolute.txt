@@ -1,0 +1,14 @@
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0\MuddEngine.exe
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0\MuddEngine.deps.json
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0\MuddEngine.runtimeconfig.json
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0\MuddEngine.dll
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0\MuddEngine.pdb
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0\MuddEngine.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0\MuddEngine.AssemblyInfoInputs.cache
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0\MuddEngine.AssemblyInfo.cs
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0\MuddEngine.csproj.CoreCompileInputs.cache
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0\MuddEngine.dll
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0\refint\MuddEngine.dll
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0\MuddEngine.pdb
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0\MuddEngine.genruntimeconfig.cache
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0\ref\MuddEngine.dll

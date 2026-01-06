@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "0SyxsjqycHE=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\clayt\\Documents\\CsharpApps\\MuddEngine\\MuddEngine.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\clayt\\.nuget\\packages\\raylib-cs\\7.0.2\\raylib-cs.7.0.2.nupkg.sha512"
+  ],
+  "logs": []
+}
