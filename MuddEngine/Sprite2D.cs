@@ -20,6 +20,8 @@ namespace MuddEngine.MuddEngine
         public float Acceleration;
         public float Height = 12f;
         public int Row;
+        public Raylib_cs.Rectangle src;
+        public Raylib_cs.Rectangle dest;
 
         public Sprite2D(Vector3 Position, string Tag, int Row, float Speed)
         {
@@ -38,6 +40,13 @@ namespace MuddEngine.MuddEngine
             //set normals
             string pathNormals = $"Assets/Sprites/Normals.png";
             SheetNormals = File.Exists(pathNormals)?Raylib.LoadTexture(pathNormals):new();
+            src = new(Facing * Size, Row * Size, Size, Size);
+            dest = new(
+                Position.X - (Scale.X / 2),
+                (Position.Y / 2) - (Position.Z * 8) - (Scale.Y / 2),
+                Scale.X,
+                Scale.Y
+            );
             MuddEngine.RegisterSprite(this);
         }
 
@@ -53,30 +62,12 @@ namespace MuddEngine.MuddEngine
         {
             //return if no sheet
             if (!HasTexture) return;
-            //location on texture atlas
-            Raylib_cs.Rectangle src = new(Facing * Size, Row * Size, Size, Size);
-            //location on screen
-            Raylib_cs.Rectangle dest = new(
-                Position.X - (Scale.X / 2),
-                (Position.Y/2) - (Position.Z*8) - (Scale.Y / 2),
-                Scale.X,
-                Scale.Y
-            );
             Raylib.DrawTexturePro(Sheet, src, dest, Vector2.Zero, 0f, Raylib_cs.Color.White);
         }
 
         public virtual void DrawLight()
         {
             if(!HasNormal) return;
-            Raylib_cs.Rectangle src = new(Facing * Size, Row * Size, Size, Size);
-
-            Raylib_cs.Rectangle dest = new(
-                Position.X - (Scale.X / 2),
-                (Position.Y / 2) - (Position.Z * 8) - (Scale.Y / 2),
-                Scale.X,
-                Scale.Y
-            );
-
             Raylib.DrawTexturePro(
                 SheetNormals,
                 src,
@@ -92,6 +83,13 @@ namespace MuddEngine.MuddEngine
             // Base sprite does NOT handle movement or dashing anymore.
             Vector2 movement = Movement * dt * Speed;
             Position += new Vector3(movement.X,movement.Y,0);
+            src = new(Facing * Size, Row * Size, Size, Size);
+            dest = new(
+                Position.X - (Scale.X / 2),
+                (Position.Y / 2) - (Position.Z * 8) - (Scale.Y / 2),
+                Scale.X,
+                Scale.Y
+            );
         }
 
         protected int GetFacing(Vector2 dir)

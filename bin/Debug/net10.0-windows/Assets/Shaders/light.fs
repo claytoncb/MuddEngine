@@ -23,6 +23,9 @@ uniform vec3 rimColor;
 // Global minimum brightness (0.0 = no ambient, 1.0 = full bright)
 uniform float ambient;
 
+uniform sampler2D depthMask;
+uniform float spriteZ; // normalized 0..1
+
 out vec4 finalColor;
 
 void main()

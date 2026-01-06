@@ -7,6 +7,7 @@ namespace MuddEngine.MuddEngine
 {
     public abstract class MuddEngine
     {
+        public float MAX_Z = 256f;
         private Thread UpdateThread;
         private bool Running = true;
         public Raylib_cs.Color BackgroundColor = Raylib_cs.Color.Black;
@@ -17,6 +18,7 @@ namespace MuddEngine.MuddEngine
         protected List<LightSource> Lights = new();
         public static RenderTexture2D LightBuffer;
         public static RenderTexture2D BaseBuffer;
+        public RenderTexture2D DepthBuffer;
         public static Shader CompositeShader;
         private static List<Sprite2D> AllSprites = new();
 
@@ -28,6 +30,7 @@ namespace MuddEngine.MuddEngine
             // --- Create render buffers ---
             LightBuffer = Raylib.LoadRenderTexture((int)ScreenSize.X, (int)ScreenSize.Y);
             BaseBuffer  = Raylib.LoadRenderTexture((int)ScreenSize.X, (int)ScreenSize.Y);
+            DepthBuffer = Raylib.LoadRenderTexture((int)ScreenSize.X, (int)ScreenSize.Y);
 
             // --- Load composite shader ---
             CompositeShader = Raylib.LoadShader(null, "Assets/Shaders/composite.fs");
@@ -77,6 +80,40 @@ namespace MuddEngine.MuddEngine
         {
             while (!Raylib.WindowShouldClose())
             {
+                // PASS 0 — DEPTH MASK
+Raylib.BeginTextureMode(DepthBuffer);
+Raylib.ClearBackground(new Raylib_cs.Color(0, 0, 0, 0));
+
+if (Camera != null)
+    Raylib.BeginMode2D(Camera.Camera);
+
+foreach (var sprite in AllSprites)
+{
+    // Normalize Z to 0..1
+    float zNorm = sprite.Position.Z / MAX_Z; // choose your max Z
+
+    // Encode Z in red channel, alpha = sprite alpha
+    Raylib_cs.Color depthColor = new Raylib_cs.Color(
+        (byte)(zNorm * 255),
+        (byte)0,
+        (byte)0,
+        (byte)255 // or sprite alpha if you want
+    );
+
+    Raylib.DrawTexturePro(
+        sprite.Sheet,          // base sprite texture
+        sprite.src,         // source
+        sprite.dest,           // destination
+        new Vector2(0, 0),         // origin
+        0f,                        // rotation
+        depthColor                 // tint encodes depth
+    );
+}
+
+if (Camera != null)
+    Raylib.EndMode2D();
+
+Raylib.EndTextureMode();
                 // PASS 1 — LIGHT BUFFER
 Raylib.BeginTextureMode(LightBuffer);
 Raylib.ClearBackground(Raylib_cs.Color.Black);
