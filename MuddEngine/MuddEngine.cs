@@ -78,30 +78,62 @@ namespace MuddEngine.MuddEngine
             while (!Raylib.WindowShouldClose())
             {
                 // PASS 1 — LIGHT BUFFER
-                Raylib.BeginTextureMode(LightBuffer);
-                Raylib.ClearBackground(Raylib_cs.Color.Black);
+Raylib.BeginTextureMode(LightBuffer);
+Raylib.ClearBackground(Raylib_cs.Color.Black);
 
-                if (Camera != null)
-                    Raylib.BeginMode2D(Camera.Camera);
+if (Camera != null)
+    Raylib.BeginMode2D(Camera.Camera);
 
-                if (Lighting != null && Lights.Count > 0)
-                {
-                    foreach (var light in Lights)
-                    {
-                        Lighting.BeginLight(light);
+if (Lighting != null && Lights.Count > 0)
+{
+    foreach (var light in Lights)
+    {
+        // Set light-level uniforms + blend mode
+        Lighting.BeginLight(light);
 
-                        foreach (var sprite in AllSprites)
-                            sprite.DrawLight();
+        foreach (var sprite in AllSprites)
+        {
+            if (!sprite.HasNormal)
+                continue;
 
-                        Lighting.EndLight();
-                    }
-                }
+            // 🔹 Begin shader mode PER SPRITE so uniforms are not batched
+            Raylib.BeginShaderMode(Lighting.Shader);
 
-                if (Camera != null)
-                    Raylib.EndMode2D();
+            // --- per-sprite world position ---
+            Vector3 spritePos = new Vector3(
+                sprite.Position.X,
+                sprite.Position.Y,
+                sprite.Position.Z
+            );
 
-                Raylib.EndTextureMode();
+            Raylib.SetShaderValue(
+                Lighting.Shader,
+                Lighting.locSpritePos,
+                spritePos,
+                ShaderUniformDataType.Vec3
+            );
 
+            // --- per-sprite normal map ---
+            Raylib.SetShaderValueTexture(
+                Lighting.Shader,
+                Lighting.locNormal,
+                sprite.SheetNormals
+            );
+
+            // --- draw THIS sprite's normal quad ---
+            sprite.DrawLight();
+
+            Raylib.EndShaderMode();
+        }
+
+        Lighting.EndLight();
+    }
+}
+
+if (Camera != null)
+    Raylib.EndMode2D();
+
+Raylib.EndTextureMode();
                 // PASS 2 — BASE BUFFER
                 Raylib.BeginTextureMode(BaseBuffer);
                 Raylib.ClearBackground(Raylib_cs.Color.Black);

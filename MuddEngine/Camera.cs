@@ -12,10 +12,8 @@ namespace MuddEngine.MuddEngine
         public CameraSprite(Player player, Vector2 screenSize)
         {
             Player = player;
-
             // Start at the player's position
             Position = player.Position;
-
             Camera = new Camera2D();
             Camera.Target   = new Vector2(Position.X, (Position.Y/2) - (Position.Z*8));
             Camera.Offset   = screenSize / 2f;   // center of screen

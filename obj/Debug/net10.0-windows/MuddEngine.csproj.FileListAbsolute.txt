@@ -20,3 +20,4 @@ C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0-windows\runtime
 C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0-windows\runtimes\win-x86\native\raylib.dll
 C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0-windows\MuddEngine.csproj.AssemblyReference.cache
 C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0-windows\MuddEngine.csproj.Up2Date
+C:\Users\clayt\Documents\CsharpApps\MuddEngine\obj\Debug\net10.0-windows\MuddEngine.sourcelink.json

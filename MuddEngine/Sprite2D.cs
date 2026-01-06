@@ -50,73 +50,42 @@ namespace MuddEngine.MuddEngine
         public bool HasHeight => SheetHeightMap.Id != 0;
 
         public virtual void DrawBase()
-{
-    //return if no sheet
-    if (Sheet.Id == 0) return;
-    //location on texture atlas
-    Raylib_cs.Rectangle src = new(Facing * Size, Row * Size, Size, Size);
-    //location on screen
-    Raylib_cs.Rectangle dest = new(
-        Position.X - (Scale.X / 2),
-        (Position.Y/2) - (Position.Z*8) - (Scale.Y / 2),
-        Scale.X,
-        Scale.Y
-    );
-    Raylib.DrawTexturePro(Sheet, src, dest, Vector2.Zero, 0f, Raylib_cs.Color.White);
-}
-public virtual void DrawNormal()
-{
-    if (!HasNormal) return;
+        {
+            //return if no sheet
+            if (!HasTexture) return;
+            //location on texture atlas
+            Raylib_cs.Rectangle src = new(Facing * Size, Row * Size, Size, Size);
+            //location on screen
+            Raylib_cs.Rectangle dest = new(
+                Position.X - (Scale.X / 2),
+                (Position.Y/2) - (Position.Z*8) - (Scale.Y / 2),
+                Scale.X,
+                Scale.Y
+            );
+            Raylib.DrawTexturePro(Sheet, src, dest, Vector2.Zero, 0f, Raylib_cs.Color.White);
+        }
 
-    // location in normal atlas
-    Raylib_cs.Rectangle src = new(
-        Facing * Size,
-        Row * Size,
-        Size,
-        Size
-    );
+        public virtual void DrawLight()
+        {
+            if(!HasNormal) return;
+            Raylib_cs.Rectangle src = new(Facing * Size, Row * Size, Size, Size);
 
-    // location on screen (same as DrawBase / DrawLight)
-    Raylib_cs.Rectangle dest = new(
-        Position.X - (Scale.X / 2),
-        (Position.Y / 2) - (Position.Z * 8) - (Scale.Y / 2),
-        Scale.X,
-        Scale.Y
-    );
+            Raylib_cs.Rectangle dest = new(
+                Position.X - (Scale.X / 2),
+                (Position.Y / 2) - (Position.Z * 8) - (Scale.Y / 2),
+                Scale.X,
+                Scale.Y
+            );
 
-    Raylib.DrawTexturePro(
-        SheetNormals,
-        src,
-        dest,
-        Vector2.Zero,
-        0f,
-        Raylib_cs.Color.White
-    );
-}
-
-public virtual void DrawLight()
-{
-    //return if no texture, normal, or lighting
-    if (!HasTexture || !HasNormal || MuddEngine.Lighting == null) return;
-    //set normalMap
-    int locNormal = Raylib.GetShaderLocation(MuddEngine.Lighting.Shader, "normalMap");
-    Raylib.SetShaderValueTexture(MuddEngine.Lighting.Shader, locNormal, SheetNormals);
-    //set spritePos
-    int locSpritePos = Raylib.GetShaderLocation(MuddEngine.Lighting.Shader, "spritePos");
-    Vector3 spritePos = new(Position.X, Position.Y, Position.Z);
-    Raylib.SetShaderValue(MuddEngine.Lighting.Shader, locSpritePos, spritePos, ShaderUniformDataType.Vec3);
-    //location in normal atlas
-    Raylib_cs.Rectangle src = new(Facing * Size, Row * Size, Size, Size);
-    //location on screen
-    Raylib_cs.Rectangle dest = new(
-        Position.X - (Scale.X / 2),
-        (Position.Y/2) - (Position.Z*8) - (Scale.Y / 2),
-        Scale.X,
-        Scale.Y
-    );
-    //draw normal
-    Raylib.DrawTexturePro(Sheet, src, dest, Vector2.Zero, 0f, Raylib_cs.Color.White);
-}
+            Raylib.DrawTexturePro(
+                SheetNormals,
+                src,
+                dest,
+                Vector2.Zero,
+                0f,
+                Raylib_cs.Color.White
+            );
+        }
 
         public virtual void Update(float dt, Keyboard keyboard)
         {

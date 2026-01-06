@@ -21,7 +21,7 @@ namespace MuddEngine
             Lighting = new LightingRenderer();
             light1 = new LightSource(player.Position+ new Vector3(0,0,12f), 800f,1.0f, Raylib_cs.Color.Blue, "BlueLight");
             AddLight(light1);
-            //ceilingLight1 = new Sprite2D(player.Position + new Vector3(512,0, 19f), "CeilingLight1",1, 0f);
+            ceilingLight1 = new Sprite2D(player.Position + new Vector3(512,0, 19f), "CeilingLight1",1, 0f);
             light2 = new LightSource(player.Position + new Vector3(512,0,12f), 800f, 1.0f, Raylib_cs.Color.Red, "RedLight");
             AddLight(light2);
             light3 = new LightSource(player.Position + new Vector3(-512,0,12f), 800f, 1.0f, Raylib_cs.Color.Green, "GreenLight");

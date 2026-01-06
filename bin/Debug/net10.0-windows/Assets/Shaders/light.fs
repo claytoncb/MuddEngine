@@ -28,19 +28,26 @@ out vec4 finalColor;
 void main()
 {
     // --- NORMAL MAP ---
-    vec3 n = texture(normalMap, fragTexCoord).rgb;
-    n = n * 2.0 - 1.0;
+// --- NORMAL MAP ---
+vec4 nm = texture(normalMap, fragTexCoord);
+
+// Discard transparent pixels so they don't emit light
+if (nm.a < 0.01)
+    discard;
+
+// Convert normal from [0,1] to [-1,1]
+vec3 n = nm.rgb * 2.0 - 1.0;
 
     float nx = -n.r;
-    float ny = -n.b;
-    float nz = -n.g;
+    float ny = n.b;
+    float nz = n.g;
 
     vec3 normal = normalize(vec3(nx, ny, nz));
 
     // --- LIGHT VECTOR ---
     vec3 L = vec3(
-        spritePos.x - lightPos.x,
-        spritePos.y - lightPos.y,
+        lightPos.x - spritePos.x,
+        lightPos.y - spritePos.y,
         lightPos.z - spritePos.z
     );
 
