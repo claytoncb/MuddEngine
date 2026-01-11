@@ -15,6 +15,7 @@ namespace MuddEngine.MuddEngine
         public Shader DepthShader;
         int locZNorm;
         int locYNorm;
+        int locHalfHeight;
         Rectangle src;
         Vector2 dest;
         public BufferHandler(Vector2 ScreenSize)
@@ -30,6 +31,7 @@ namespace MuddEngine.MuddEngine
             );
             locZNorm = Raylib.GetShaderLocation(DepthShader, "zNorm");
             locYNorm = Raylib.GetShaderLocation(DepthShader, "yNorm");
+            locHalfHeight = Raylib.GetShaderLocation(DepthShader, "halfHeight");
         }
         public void OnLoad( CameraSprite Camera)
         {
@@ -75,7 +77,7 @@ namespace MuddEngine.MuddEngine
 
             Raylib.EndTextureMode();
         }
-        public void WriteDepth(List<Sprite2D> sprites, float MAX_Y, float MAX_Z)
+        public void WriteDepth(List<Sprite2D> sprites, float MAX_Y, float MAX_Z, float MAX_SPRITE_HEIGHT)
         {
             Raylib.BeginTextureMode(DepthBuffer);
             Raylib.ClearBackground(new Color(0, 0, 0, 0));
@@ -91,11 +93,13 @@ namespace MuddEngine.MuddEngine
                 
                 float yNorm = Math.Clamp(((sprite.Position.Y - Camera.Position.Y) / (MAX_Y * 2)) + 0.5f, 0f, 1f);
                 float zNorm = Math.Clamp(sprite.Position.Z / MAX_Z, 0f, 1f);
-
+                float spriteHalfHeight = sprite.Scale.Y * 0.5f;
+                float spriteHalfHeightNorm = spriteHalfHeight / MAX_SPRITE_HEIGHT;
                 // Shader MUST be active here
                 Raylib.BeginShaderMode(DepthShader);
                 Raylib.SetShaderValue(DepthShader, locYNorm, yNorm, ShaderUniformDataType.Float);
                 Raylib.SetShaderValue(DepthShader, locZNorm, zNorm, ShaderUniformDataType.Float);
+                Raylib.SetShaderValue(DepthShader, locHalfHeight, spriteHalfHeightNorm, ShaderUniformDataType.Float);
                 sprite.DrawParallax();
                 Raylib.EndShaderMode();
             }
@@ -107,11 +111,11 @@ namespace MuddEngine.MuddEngine
 
             Raylib.EndTextureMode();
         }
-        public void WriteBuffers(List<Sprite2D> sprites, float MAX_Y, float MAX_Z)
+        public void WriteBuffers(List<Sprite2D> sprites, float MAX_Y, float MAX_Z, float MAX_SPRITE_HEIGHT)
         {
             WriteBase(sprites);
             WriteNormals(sprites);
-            WriteDepth(sprites, MAX_Y, MAX_Z);
+            WriteDepth(sprites, MAX_Y, MAX_Z, MAX_SPRITE_HEIGHT);
         }
         public void DrawBase()
         {

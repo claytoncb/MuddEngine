@@ -13,6 +13,7 @@ namespace MuddEngine.MuddEngine
         public int locScreenSize;
         public int locMaxZ;
         public int locMaxY;
+        public int locMaxSpriteHeight;
         public int locLightCount;
         public int locLightPos;
         public int locLightColor;
@@ -35,6 +36,7 @@ namespace MuddEngine.MuddEngine
             locScreenSize  = Raylib.GetShaderLocation(Shader, "screenSize");
             locMaxZ        = Raylib.GetShaderLocation(Shader, "maxZ");
             locMaxY        = Raylib.GetShaderLocation(Shader, "maxY");
+            locMaxSpriteHeight = Raylib.GetShaderLocation(Shader, "maxSpriteHeight");
 
             locLightCount  = Raylib.GetShaderLocation(Shader, "lightCount");
             locLightPos    = Raylib.GetShaderLocation(Shader, "lightPos");
@@ -63,6 +65,7 @@ namespace MuddEngine.MuddEngine
             Vector2 screenSize,
             float maxY,
             float maxZ,
+            float maxSpriteHeight,
             List<LightSource> lights,
             CameraSprite camera
         )
@@ -92,6 +95,7 @@ namespace MuddEngine.MuddEngine
             Raylib.SetShaderValue(Shader, locScreenSize, screenSize, ShaderUniformDataType.Vec2);
             Raylib.SetShaderValue(Shader, locMaxZ, new float[] { maxZ }, ShaderUniformDataType.Float);
             Raylib.SetShaderValue(Shader, locMaxY, new float[] { maxY }, ShaderUniformDataType.Float);
+            Raylib.SetShaderValue(Shader, locMaxSpriteHeight, new float[] { maxSpriteHeight }, ShaderUniformDataType.Float);
 
             // Camera uniforms
             Raylib.SetShaderValue(Shader, locCameraTarget, camera.Camera.Target, ShaderUniformDataType.Vec2);

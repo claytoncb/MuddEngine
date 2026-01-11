@@ -6,6 +6,7 @@ uniform sampler2D texture0;   // sprite sheet
 uniform float uprightSprite;
 uniform float zNorm;      // 0..1 depth value
 uniform float yNorm;      // 0..1 depth value
+uniform float halfHeight;
 
 out vec4 finalColor;
 
