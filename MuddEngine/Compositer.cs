@@ -10,7 +10,6 @@ namespace MuddEngine.MuddEngine
         public int locBaseTex;
         public int locNormalTex;
         public int locDepthTex;
-
         public int locScreenSize;
         public int locMaxZ;
         public int locMaxY;

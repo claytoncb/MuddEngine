@@ -5,8 +5,8 @@ namespace MuddEngine.MuddEngine
 {
     public class Player : DashingEntity
     {
-        public Player(Vector3 pos, string tag, int Row, float speed)
-            : base(pos, tag, Row, speed)
+        public Player(Vector3 pos, string tag, int Row, float speed, string AltasName)
+            : base(pos, tag, Row, speed, AltasName)
         {
         }
 

@@ -12,8 +12,8 @@ namespace MuddEngine.MuddEngine
         public float DashAcceleration = 1000f;
         public bool Dashing = false;
 
-        public DashingEntity(Vector3 pos, string tag, int Row, float speed)
-            : base(pos, tag, Row, speed)
+        public DashingEntity(Vector3 pos, string tag, int Row, float speed, string AltasName)
+            : base(pos, tag, Row, speed, AltasName)
         {
             Stamina = MaxStamina;
         }

@@ -18,5 +18,5 @@ void main()
         discard;
 
     // RGB = depth, A = sprite alpha
-    finalColor = vec4(uprightSprite, yNorm, zNorm, tex.a);
+    finalColor = vec4(tex.r, yNorm, zNorm, tex.a);
 }

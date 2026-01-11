@@ -9,8 +9,9 @@ namespace MuddEngine.MuddEngine
         public Vector2 Scale;
         public int Size = 32;
         public string Tag = "";
-        public Texture2D Sheet;
+        public Texture2D SheetBase;
         public Texture2D SheetNormals;
+        public Texture2D SheetParallax;
         public Texture2D SheetHeightMap;
         public Texture2D AlphaMask;
         public Bitmap Sprite = null;
@@ -25,7 +26,7 @@ namespace MuddEngine.MuddEngine
         public Raylib_cs.Rectangle src;
         public Raylib_cs.Rectangle dest;
 
-        public Sprite2D(Vector3 Position, string Tag, int Row, float Speed, string path = "Assets/Sprites/Atlas.png", string pathNormals = $"Assets/Sprites/Normals.png", bool upright=true)
+        public Sprite2D(Vector3 Position, string Tag, int Row, float Speed, string AtlasName, bool upright=true)
         {
             this.Position = Position;
             this.Scale = new Vector2(4,4);
@@ -37,8 +38,9 @@ namespace MuddEngine.MuddEngine
             this.Upright = upright;
             MinSpeed = Speed;
             Acceleration = 1000f;
-            Sheet = File.Exists(path)?Raylib.LoadTexture(path):new();
-            SheetNormals = File.Exists(pathNormals)?Raylib.LoadTexture(pathNormals):new();
+            SheetBase = File.Exists($"Assets/Sprites/{AtlasName}Atlas.png")?Raylib.LoadTexture($"Assets/Sprites/{AtlasName}Atlas.png"):new();
+            SheetNormals = File.Exists($"Assets/Sprites/{AtlasName}Normals.png")?Raylib.LoadTexture($"Assets/Sprites/{AtlasName}Normals.png"):new();
+            SheetParallax = File.Exists($"Assets/Sprites/{AtlasName}Parallax.png")?Raylib.LoadTexture($"Assets/Sprites/{AtlasName}Parallax.png"):new();
             src = new(Facing * Size, Row * Size, Size, Size);
             dest = new(
                 Position.X - (Scale.X / 2),
@@ -53,21 +55,34 @@ namespace MuddEngine.MuddEngine
         {
             MuddEngine.UnregisterSprite(this);
         }
-        public bool HasTexture => Sheet.Id != 0;
+        public bool HasTexture => SheetBase.Id != 0;
         public bool HasNormal => SheetNormals.Id != 0;
+        public bool HasParallax => SheetParallax.Id != 0;
         public bool HasHeight => SheetHeightMap.Id != 0;
 
         public virtual void DrawBase()
         {
             if (!HasTexture) return;
-            Raylib.DrawTexturePro(Sheet, src, dest, Vector2.Zero, 0f, Raylib_cs.Color.White);
+            Raylib.DrawTexturePro(SheetBase, src, dest, Vector2.Zero, 0f, Raylib_cs.Color.White);
         }
 
-        public virtual void DrawLight()
+        public virtual void DrawNormals()
         {
             if(!HasNormal) return;
             Raylib.DrawTexturePro(
                 SheetNormals,
+                src,
+                dest,
+                Vector2.Zero,
+                0f,
+                Raylib_cs.Color.White
+            );
+        }
+        public virtual void DrawParallax()
+        {
+            if(!HasParallax) return;
+            Raylib.DrawTexturePro(
+                SheetParallax,
                 src,
                 dest,
                 Vector2.Zero,
