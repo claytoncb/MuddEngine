@@ -57,12 +57,12 @@ namespace MuddEngine.MuddEngine
 
         OnLoad();
 
-        // UpdateThread = new Thread(UpdateLoop);
-        // UpdateThread.Start();
-        // DrawLoop();
+        UpdateThread = new Thread(UpdateLoop);
+        UpdateThread.Start();
+        DrawLoop();
 
-        // Running = false;
-        // UpdateThread.Join();
+        Running = false;
+        UpdateThread.Join();
 
         // Cleanup
         Raylib.UnloadShader(DepthShader);
@@ -200,15 +200,6 @@ namespace MuddEngine.MuddEngine
             int view = 4; // 1=Base,2=Normals,3=Depth,4=Light,5=Composite (start on Light)
             while (!Raylib.WindowShouldClose())
             {
-                float dt = Raylib.GetFrameTime();
-
-                // update
-                foreach (var sprite in AllSprites)
-                    sprite.Update(dt, Keyboard);
-
-                OnUpdate(dt);
-                Camera.Update(dt);
-
                 // quick view keys
                 if (Raylib.IsKeyPressed(KeyboardKey.One)) view = 1;
                 if (Raylib.IsKeyPressed(KeyboardKey.Two)) view = 2;
