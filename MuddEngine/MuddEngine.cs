@@ -1,50 +1,80 @@
 using System.Diagnostics;
 using System.Numerics;
 using Raylib_cs;
-
+using Color = Raylib_cs.Color;
+using Rectangle = Raylib_cs.Rectangle;
 
 namespace MuddEngine.MuddEngine
 {
     public abstract class MuddEngine
+{
+    public float MAX_Z = 200000f;
+    public float MAX_Y = 1000f;
+    private Thread UpdateThread;
+    private bool Running = true;
+    public Color BackgroundColor = Color.Black;
+    public Keyboard Keyboard = new Keyboard();
+    private Stopwatch Stopwatch = new();
+    public Vector2 ScreenSize;
+    public static CameraSprite Camera;
+    public static LightingRenderer Lighting;
+    protected List<LightSource> Lights = new();
+
+    public static RenderTexture2D BaseBuffer;
+    public RenderTexture2D DepthBuffer;
+    public RenderTexture2D NormalBuffer;
+    public static Shader CompositeShader;
+    public static Shader DepthShader;
+
+    private static List<Sprite2D> AllSprites = new();
+    int locZNorm;
+    int locYNorm;
+
+    // Constructor
+    public Compositer Compositer;
+
+    public MuddEngine(string title, Vector2 screenSize)
     {
-        public float MAX_Z = 256f;
-        private Thread UpdateThread;
-        private bool Running = true;
-        public Raylib_cs.Color BackgroundColor = Raylib_cs.Color.Black;
-        public Keyboard Keyboard = new Keyboard();
-        private Stopwatch Stopwatch = new();
-        public static CameraSprite Camera;
-        public static LightingRenderer Lighting;
-        protected List<LightSource> Lights = new();
-        public static RenderTexture2D LightBuffer;
-        public static RenderTexture2D BaseBuffer;
-        public RenderTexture2D DepthBuffer;
-        public static Shader CompositeShader;
-        private static List<Sprite2D> AllSprites = new();
+        ScreenSize = screenSize;
 
-        public MuddEngine(string Title, Vector2 ScreenSize)
-        {
-            Raylib.InitWindow((int)ScreenSize.X, (int)ScreenSize.Y, Title);
-            Raylib.SetTargetFPS(60);
+        Raylib.InitWindow((int)ScreenSize.X, (int)ScreenSize.Y, title);
+        Raylib.SetTargetFPS(60);
 
-            // --- Create render buffers ---
-            LightBuffer = Raylib.LoadRenderTexture((int)ScreenSize.X, (int)ScreenSize.Y);
-            BaseBuffer  = Raylib.LoadRenderTexture((int)ScreenSize.X, (int)ScreenSize.Y);
-            DepthBuffer = Raylib.LoadRenderTexture((int)ScreenSize.X, (int)ScreenSize.Y);
+        BaseBuffer   = Raylib.LoadRenderTexture((int)ScreenSize.X, (int)ScreenSize.Y);
+        NormalBuffer = Raylib.LoadRenderTexture((int)ScreenSize.X, (int)ScreenSize.Y);
+        DepthBuffer  = Raylib.LoadRenderTexture((int)ScreenSize.X, (int)ScreenSize.Y);
 
-            // --- Load composite shader ---
-            CompositeShader = Raylib.LoadShader(null, "Assets/Shaders/composite.fs");
+        DepthShader = Raylib.LoadShader(
+            "Assets/Shaders/vertexShader.vs",
+            "Assets/Shaders/depth.fs"
+        );
 
-            OnLoad();
+        locZNorm = Raylib.GetShaderLocation(DepthShader, "zNorm");
+        locYNorm = Raylib.GetShaderLocation(DepthShader, "yNorm");
 
-            UpdateThread = new Thread(UpdateLoop);
-            UpdateThread.Start();
-            DrawLoop();
+        // NEW compositer
+        Compositer = new Compositer();
 
-            Running = false;
-            UpdateThread.Join();
-            Raylib.CloseWindow();
-        }
+        OnLoad();
+
+        // UpdateThread = new Thread(UpdateLoop);
+        // UpdateThread.Start();
+        // DrawLoop();
+
+        // Running = false;
+        // UpdateThread.Join();
+
+        // Cleanup
+        Raylib.UnloadShader(DepthShader);
+        Raylib.UnloadShader(Compositer.Shader);
+
+        Raylib.UnloadRenderTexture(BaseBuffer);
+        Raylib.UnloadRenderTexture(NormalBuffer);
+        Raylib.UnloadRenderTexture(DepthBuffer);
+
+        Raylib.CloseWindow();
+    }
+
         public void AddLight(LightSource light) => Lights.Add(light);
         public void RemoveLight(LightSource light) => Lights.Remove(light);
 
@@ -75,160 +105,173 @@ namespace MuddEngine.MuddEngine
             }
 
         }
-
-        private void DrawLoop()
+        private void GBufferPass(List<Sprite2D> sprites)
         {
-            while (!Raylib.WindowShouldClose())
-            {
-                // PASS 0 — DEPTH MASK
-Raylib.BeginTextureMode(DepthBuffer);
-Raylib.ClearBackground(new Raylib_cs.Color(0, 0, 0, 0));
-
-if (Camera != null)
-    Raylib.BeginMode2D(Camera.Camera);
-
-foreach (var sprite in AllSprites)
-{
-    // Normalize Z to 0..1
-    float zNorm = sprite.Position.Z / MAX_Z; // choose your max Z
-
-    // Encode Z in red channel, alpha = sprite alpha
-    Raylib_cs.Color depthColor = new Raylib_cs.Color(
-        (byte)(zNorm * 255),
-        (byte)0,
-        (byte)0,
-        (byte)255 // or sprite alpha if you want
-    );
-
-    Raylib.DrawTexturePro(
-        sprite.Sheet,          // base sprite texture
-        sprite.src,         // source
-        sprite.dest,           // destination
-        new Vector2(0, 0),         // origin
-        0f,                        // rotation
-        depthColor                 // tint encodes depth
-    );
-}
-
-if (Camera != null)
-    Raylib.EndMode2D();
-
-Raylib.EndTextureMode();
-                // PASS 1 — LIGHT BUFFER
-Raylib.BeginTextureMode(LightBuffer);
-Raylib.ClearBackground(Raylib_cs.Color.Black);
-
-if (Camera != null)
-    Raylib.BeginMode2D(Camera.Camera);
-
-if (Lighting != null && Lights.Count > 0)
-{
-    foreach (var light in Lights)
-    {
-        // Set light-level uniforms + blend mode
-        Lighting.BeginLight(light);
-
-        foreach (var sprite in AllSprites)
+            BasePass(sprites);
+            NormalsPass(sprites);
+            DepthPass(sprites);
+        }
+        private void BasePass(List<Sprite2D> sprites)
         {
-            if (!sprite.HasNormal)
-                continue;
+            // --- BASE (ALBEDO) ---
+            Raylib.BeginTextureMode(BaseBuffer);
+            Raylib.ClearBackground(Color.Blank); // transparent clear so alpha = 0 where nothing is drawn
 
-            // 🔹 Begin shader mode PER SPRITE so uniforms are not batched
-            Raylib.BeginShaderMode(Lighting.Shader);
+            if (Camera != null)
+                Raylib.BeginMode2D(Camera.Camera);
 
-            // --- per-sprite world position ---
-            Vector3 spritePos = new Vector3(
-                sprite.Position.X,
-                sprite.Position.Y,
-                sprite.Position.Z
-            );
+            // Ensure alpha blending is enabled while drawing sprites into the base buffer
+            Raylib.BeginBlendMode(BlendMode.Alpha);
+            foreach (var sprite in sprites)
+                sprite.DrawBase(); // your sprite draw should use Color.White internally to preserve alpha
+            Raylib.EndBlendMode();
 
-            Raylib.SetShaderValue(
-                Lighting.Shader,
-                Lighting.locSpritePos,
-                spritePos,
-                ShaderUniformDataType.Vec3
-            );
+            if (Camera != null)
+                Raylib.EndMode2D();
 
-            // --- per-sprite normal map ---
-            Raylib.SetShaderValueTexture(
-                Lighting.Shader,
-                Lighting.locNormal,
-                sprite.SheetNormals
-            );
-
-            // --- draw THIS sprite's normal quad ---
-            sprite.DrawLight();
-
-            Raylib.EndShaderMode();
+            Raylib.EndTextureMode();
         }
 
-        Lighting.EndLight();
-    }
-}
+        private void NormalsPass(List<Sprite2D> sprites)
+        {
+            // --- NORMALS ---
+            Raylib.BeginTextureMode(NormalBuffer);
+            Raylib.ClearBackground(new Color(128, 128, 255, 0));
 
-if (Camera != null)
-    Raylib.EndMode2D();
+            if (Camera != null)
+                Raylib.BeginMode2D(Camera.Camera);
+            Raylib.BeginBlendMode(BlendMode.Alpha);
 
-Raylib.EndTextureMode();
-                // PASS 2 — BASE BUFFER
-                Raylib.BeginTextureMode(BaseBuffer);
-                Raylib.ClearBackground(Raylib_cs.Color.Black);
+            foreach (var sprite in sprites)
+            {
+                sprite.DrawLight();
+            }
 
-                if (Camera != null)
-                    Raylib.BeginMode2D(Camera.Camera);
+            Raylib.EndBlendMode();
 
-                OnDraw();
+            if (Camera != null)
+                Raylib.EndMode2D();
 
-                foreach (var sprite in AllSprites)
-                    sprite.DrawBase();
+            Raylib.EndTextureMode();
+        }
 
-                if (Camera != null)
-                    Raylib.EndMode2D();
+        private void DepthPass(List<Sprite2D> sprites)
+        {
+            Raylib.BeginTextureMode(DepthBuffer);
+            Raylib.ClearBackground(new Color(0, 0, 0, 0));
 
-                Raylib.EndTextureMode();
+            if (Camera != null)
+                Raylib.BeginMode2D(Camera.Camera);
 
-                // PASS 3 — COMPOSITE
-                Raylib.BeginDrawing();
-                Raylib.ClearBackground(BackgroundColor);
+            // Depth pass MUST use alpha blending so sprite silhouettes are preserved
+            Raylib.BeginBlendMode(BlendMode.Alpha);
 
-                Raylib.BeginShaderMode(CompositeShader);
+            foreach (var sprite in sprites)
+            {
+                float yNorm = Math.Clamp(((sprite.Position.Y - Camera.Position.Y) / (MAX_Y * 2)) + 0.5f, 0f, 1f);
+                float zNorm = Math.Clamp(sprite.Position.Z / MAX_Z, 0f, 1f);
 
-                Raylib.SetShaderValueTexture(
-                    CompositeShader,
-                    Raylib.GetShaderLocation(CompositeShader, "baseTexture"),
-                    BaseBuffer.Texture
-                );
+                // Shader MUST be active here
+                Raylib.BeginShaderMode(DepthShader);
+                Raylib.SetShaderValue(DepthShader, locYNorm, yNorm, ShaderUniformDataType.Float);
+                Raylib.SetShaderValue(DepthShader, locZNorm, zNorm, ShaderUniformDataType.Float);
 
-                Raylib.SetShaderValueTexture(
-                    CompositeShader,
-                    Raylib.GetShaderLocation(CompositeShader, "lightTexture"),
-                    LightBuffer.Texture
-                );
-
-                Raylib.DrawTextureRec(
-                    BaseBuffer.Texture,
-                    new Raylib_cs.Rectangle(0, 0, BaseBuffer.Texture.Width, -BaseBuffer.Texture.Height),
-                    new Vector2(0, 0),
-                    Raylib_cs.Color.White
+                Raylib.DrawTexturePro(
+                    sprite.Sheet,
+                    sprite.src,
+                    sprite.dest,
+                    Vector2.Zero,
+                    0f,
+                    Color.White
                 );
 
                 Raylib.EndShaderMode();
+            }
 
-                // PASS 4 — ICONS
-                if (Camera != null)
-                    Raylib.BeginMode2D(Camera.Camera);
+            Raylib.EndBlendMode();
 
-                foreach (var light in Lights)
-                    light.DrawBase();
+            if (Camera != null)
+                Raylib.EndMode2D();
 
-                if (Camera != null)
-                    Raylib.EndMode2D();
+            Raylib.EndTextureMode();
+        }
+        private void DrawLoop()
+        {
+            int view = 4; // 1=Base,2=Normals,3=Depth,4=Light,5=Composite (start on Light)
+            while (!Raylib.WindowShouldClose())
+            {
+                float dt = Raylib.GetFrameTime();
+
+                // update
+                foreach (var sprite in AllSprites)
+                    sprite.Update(dt, Keyboard);
+
+                OnUpdate(dt);
+                Camera.Update(dt);
+
+                // quick view keys
+                if (Raylib.IsKeyPressed(KeyboardKey.One)) view = 1;
+                if (Raylib.IsKeyPressed(KeyboardKey.Two)) view = 2;
+                if (Raylib.IsKeyPressed(KeyboardKey.Three)) view = 3;
+                if (Raylib.IsKeyPressed(KeyboardKey.Four)) view = 4;
+
+                // snapshot sprites safely
+                List<Sprite2D> spritesByDepth;
+                lock (AllSprites)
+                {
+                    spritesByDepth = AllSprites
+                        .OrderBy(s => s.Position.Z)
+                        .ThenBy(s => -s.Position.Y)
+                        .ToList();
+                }
+
+                // produce G-buffers and lighting
+                GBufferPass(spritesByDepth);
+
+                // draw selected buffer or composite full-screen for inspection
+                Raylib.BeginDrawing();
+                Raylib.ClearBackground(Color.Black);
+
+                // RenderTexture2D textures are typically vertically flipped relative to screen.
+                // Use a source rectangle with negative height to flip them upright.
+                Rectangle src = new Rectangle(0, ScreenSize.Y, ScreenSize.X, -ScreenSize.Y);
+                Vector2 dest = new Vector2(0, 0);
+
+                switch (view)
+                {
+                    case 1: // Base (albedo)
+                        Raylib.DrawTextureRec(BaseBuffer.Texture, src, dest, Color.White);
+                        Raylib.DrawText("View: BaseBuffer (F1)", 10, 10, 20, Color.White);
+                        break;
+                    case 2: // Normals
+                        Raylib.DrawTextureRec(NormalBuffer.Texture, src, dest, Color.White);
+                        Raylib.DrawText("View: NormalBuffer (F2)", 10, 10, 20, Color.White);
+                        break;
+                    case 3: // Depth
+                        Raylib.DrawTextureRec(DepthBuffer.Texture, src, dest, Color.White);
+                        Raylib.DrawText("View: DepthBuffer (F3)", 10, 10, 20, Color.White);
+                        break;
+                    default:
+                        // CompositePass draws the final composite using CompositeShader.
+                        // CompositePass expects to be called between BeginDrawing/EndDrawing.
+                        Compositer.Draw(
+                            BaseBuffer,
+                            NormalBuffer,
+                            DepthBuffer,
+                            ScreenSize,
+                            MAX_Y,
+                            MAX_Z,
+                            Lights,
+                            Camera
+                        );
+
+                        Raylib.DrawText("View: Composite (F4)", 10, 10, 20, Color.White);
+                        break;
+                }
 
                 Raylib.EndDrawing();
             }
         }
-
         public abstract void OnLoad();
         public abstract void OnUpdate(float dt);
         public abstract void OnDraw();

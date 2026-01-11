@@ -12,6 +12,7 @@ namespace MuddEngine.MuddEngine
         public Texture2D Sheet;
         public Texture2D SheetNormals;
         public Texture2D SheetHeightMap;
+        public Texture2D AlphaMask;
         public Bitmap Sprite = null;
         public int Facing = 0;
         public float Speed = 0;
@@ -43,7 +44,7 @@ namespace MuddEngine.MuddEngine
             src = new(Facing * Size, Row * Size, Size, Size);
             dest = new(
                 Position.X - (Scale.X / 2),
-                (Position.Y / 2) - (Position.Z * 8) - (Scale.Y / 2),
+                -(Position.Y * .5f) - (Position.Z * 8f) - (Scale.Y * .5f),
                 Scale.X,
                 Scale.Y
             );
@@ -60,7 +61,6 @@ namespace MuddEngine.MuddEngine
 
         public virtual void DrawBase()
         {
-            //return if no sheet
             if (!HasTexture) return;
             Raylib.DrawTexturePro(Sheet, src, dest, Vector2.Zero, 0f, Raylib_cs.Color.White);
         }
@@ -86,7 +86,7 @@ namespace MuddEngine.MuddEngine
             src = new(Facing * Size, Row * Size, Size, Size);
             dest = new(
                 Position.X - (Scale.X / 2),
-                (Position.Y / 2) - (Position.Z * 8) - (Scale.Y / 2),
+                -(Position.Y / 2) - (Position.Z * 8) - (Scale.Y / 2),
                 Scale.X,
                 Scale.Y
             );
@@ -112,7 +112,7 @@ namespace MuddEngine.MuddEngine
             else 
                 direction = Facing%2;
             // Up/Down
-            if (dir.Y < -eps)
+            if (dir.Y > eps)
                 direction+=2;
             
             // Default fallback (no movement)

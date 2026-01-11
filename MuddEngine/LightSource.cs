@@ -34,7 +34,7 @@ namespace MuddEngine.MuddEngine
             float size = IconTexture.Width * IconScale;
 
             float drawX = Position.X - size * 0.5f;
-            float drawY = (Position.Y/2) - (Position.Z*8) - size * 0.5f;
+            float drawY = -(Position.Y / 2) - (Position.Z * 8) - size * 0.5f;
 
             Raylib_cs.Rectangle src = new(0, 0, IconTexture.Width, IconTexture.Height);
             Raylib_cs.Rectangle dest = new(drawX, drawY, size, size);

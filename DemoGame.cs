@@ -11,25 +11,34 @@ namespace MuddEngine
         LightSource light1;
         Sprite2D ceilingLight1;
         LightSource light2;
+        Sprite2D ceilingLight2;
         LightSource light3;
+        Sprite2D ceilingLight3;
         LightSource light4;
+        Sprite2D ceilingLight4;
         public DemoGame() : base("test",new Vector2(2048,1024)) {}
         public override void OnLoad()
         {
-            player = new Player(new Vector3(1024,512,0),"PlayerHead",0, 150f);
+            player = new Player(new Vector3(1024,512,5),"PlayerHead",0, 150f);
             Camera = new CameraSprite(player, new Vector2(2048, 1024));
             Lighting = new LightingRenderer();
-            light1 = new LightSource(player.Position+ new Vector3(0,0,12f), 800f,1.0f, Raylib_cs.Color.Blue, "BlueLight");
-            AddLight(light1);
-            ceilingLight1 = new Sprite2D(player.Position + new Vector3(512,0, 19f), "CeilingLight1",1, 0f);
-            light2 = new LightSource(player.Position + new Vector3(512,0,12f), 800f, 1.0f, Raylib_cs.Color.Red, "RedLight");
-            AddLight(light2);
-            light3 = new LightSource(player.Position + new Vector3(-512,0,12f), 800f, 1.0f, Raylib_cs.Color.Green, "GreenLight");
-            AddLight(light3);
-            light4 = new LightSource(player.Position + new Vector3(-1024,0,12f), 800f, 1.0f, Raylib_cs.Color.White, "WhiteLight");
-            AddLight(light4);
 
-}
+            light1 = new LightSource(player.Position+ new Vector3(0,0,17f), 800f,1.0f, Raylib_cs.Color.Blue, "BlueLight");
+            AddLight(light1);
+            ceilingLight1 = new Sprite2D(player.Position + new Vector3(0,0, 18f), "CeilingLight1",1, 0f);
+
+            light2 = new LightSource(player.Position + new Vector3(512,0,17f), 800f, 1.0f, Raylib_cs.Color.Red, "RedLight");
+            AddLight(light2);
+            ceilingLight2 = new Sprite2D(player.Position + new Vector3(512,0, 18f), "CeilingLight2",1, 0f);
+
+            light3 = new LightSource(player.Position + new Vector3(-512,0,17f), 800f, 1.0f, Raylib_cs.Color.Green, "GreenLight");
+            AddLight(light3);
+            ceilingLight3 = new Sprite2D(player.Position + new Vector3(-512,0, 18f), "CeilingLight3",1, 0f);
+
+            light4 = new LightSource(player.Position + new Vector3(-1024,0,17f), 800f, 1.0f, Raylib_cs.Color.White, "WhiteLight");
+            AddLight(light4);
+            ceilingLight4 = new Sprite2D(player.Position + new Vector3(-1024,0, 18f), "CeilingLight4",1, 0f);
+        }
 
 
         public override void OnUpdate(float dt)

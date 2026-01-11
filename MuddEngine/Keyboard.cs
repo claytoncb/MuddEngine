@@ -47,8 +47,8 @@ namespace MuddEngine.MuddEngine
             }
 
             // Vertical
-            if (up && !down) input.Y = -1;
-            else if (down && !up) input.Y = 1;
+            if (up && !down) input.Y = 1;
+            else if (down && !up) input.Y = -1;
             else if (up && down)
             {
                 input.Y = (lastVertical == KeyboardKey.W) ? -1 : 1;

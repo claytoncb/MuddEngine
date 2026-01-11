@@ -15,7 +15,7 @@ namespace MuddEngine.MuddEngine
             // Start at the player's position
             Position = player.Position;
             Camera = new Camera2D();
-            Camera.Target   = new Vector2(Position.X, (Position.Y/2) - (Position.Z*8));
+            Camera.Target   = new Vector2(Position.X, -(Position.Y / 2) - (Position.Z * 8));
             Camera.Offset   = screenSize / 2f;   // center of screen
             Camera.Rotation = 0f;
             Camera.Zoom     = 1f;
@@ -25,7 +25,7 @@ namespace MuddEngine.MuddEngine
         {
             // Follow the player
             Position = Player.Position;
-            Camera.Target = new Vector2(Position.X, (Position.Y/2) - (Position.Z*8));
+            Camera.Target = new Vector2(Position.X, -(Position.Y / 2) - (Position.Z * 8));
         }
     }
 }
