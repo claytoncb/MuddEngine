@@ -3,6 +3,7 @@
 in vec2 fragTexCoord;
 
 uniform sampler2D texture0;   // sprite sheet
+uniform float uprightSprite;
 uniform float zNorm;      // 0..1 depth value
 uniform float yNorm;      // 0..1 depth value
 
@@ -17,5 +18,5 @@ void main()
         discard;
 
     // RGB = depth, A = sprite alpha
-    finalColor = vec4(0.0, yNorm, zNorm, tex.a);
+    finalColor = vec4(uprightSprite, yNorm, zNorm, tex.a);
 }

@@ -21,10 +21,11 @@ namespace MuddEngine.MuddEngine
         public float Acceleration;
         public float Height = 12f;
         public int Row;
+        public bool Upright;
         public Raylib_cs.Rectangle src;
         public Raylib_cs.Rectangle dest;
 
-        public Sprite2D(Vector3 Position, string Tag, int Row, float Speed)
+        public Sprite2D(Vector3 Position, string Tag, int Row, float Speed, string path = "Assets/Sprites/Atlas.png", string pathNormals = $"Assets/Sprites/Normals.png", bool upright=true)
         {
             this.Position = Position;
             this.Scale = new Vector2(4,4);
@@ -33,13 +34,10 @@ namespace MuddEngine.MuddEngine
             this.Tag = Tag;
             this.Speed = Speed;
             this.Row = Row;
+            this.Upright = upright;
             MinSpeed = Speed;
             Acceleration = 1000f;
-            //set texture
-            string path = $"Assets/Sprites/Atlas.png";
             Sheet = File.Exists(path)?Raylib.LoadTexture(path):new();
-            //set normals
-            string pathNormals = $"Assets/Sprites/Normals.png";
             SheetNormals = File.Exists(pathNormals)?Raylib.LoadTexture(pathNormals):new();
             src = new(Facing * Size, Row * Size, Size, Size);
             dest = new(

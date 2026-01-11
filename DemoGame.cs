@@ -1,5 +1,6 @@
 using System.Media;
 using System.Numerics;
+using System.Security.Principal;
 using MuddEngine.MuddEngine;
 using Raylib_cs;
 
@@ -19,11 +20,11 @@ namespace MuddEngine
         public DemoGame() : base("test",new Vector2(2048,1024)) {}
         public override void OnLoad()
         {
-            player = new Player(new Vector3(1024,512,5),"PlayerHead",0, 150f);
+            player = new Player(new Vector3(1024,512,10),"PlayerHead",0, 150f);
             Camera = new CameraSprite(player, new Vector2(2048, 1024));
             Lighting = new LightingRenderer();
 
-            light1 = new LightSource(player.Position+ new Vector3(0,0,17f), 800f,1.0f, Raylib_cs.Color.Blue, "BlueLight");
+            light1 = new LightSource(player.Position+ new Vector3(0,0,17f), 2400f,1.0f, Raylib_cs.Color.Blue, "BlueLight");
             AddLight(light1);
             ceilingLight1 = new Sprite2D(player.Position + new Vector3(0,0, 18f), "CeilingLight1",1, 0f);
 
@@ -38,6 +39,13 @@ namespace MuddEngine
             light4 = new LightSource(player.Position + new Vector3(-1024,0,17f), 800f, 1.0f, Raylib_cs.Color.White, "WhiteLight");
             AddLight(light4);
             ceilingLight4 = new Sprite2D(player.Position + new Vector3(-1024,0, 18f), "CeilingLight4",1, 0f);
+            for (int j = 0; j < 3; j++)
+            {
+                for (int i = 0; i < 20; i++)
+                {
+                    Sprite2D Tile = new Sprite2D(new Vector3(128*i,640 - 128*j,0),$"Tile{i}-{j}",0,0,"Assets/Sprites/TileAtlas.png","Assets/Sprites/TileNormals.png", false);
+                }
+            }
         }
 
 

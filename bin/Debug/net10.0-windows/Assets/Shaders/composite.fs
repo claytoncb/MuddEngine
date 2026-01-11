@@ -39,10 +39,13 @@ void main()
     normal = normalize(normal);
 
     // Depth buffer → world Y/Z
-    float spriteYNorm = texture(depthTex, uv).g;
-    float spriteZNorm = texture(depthTex, uv).b;
+    vec4 depthData =texture(depthTex, uv);
+    bool uprightSprite = depthData.r==1.0;
+    float spriteYNorm = depthData.g;
+    float spriteZNorm = depthData.b;
 
     float worldY = ((spriteYNorm - 0.5) * (2.0 * maxY)) + cameraPos.y;
+    
     float worldZ = spriteZNorm * maxZ;
 
     // Undo Camera2D transform
@@ -50,6 +53,16 @@ void main()
     vec2 worldScreen = (screen - cameraOffset) / cameraZoom + cameraTarget;
 
     float worldX = worldScreen.x;
+    if (!uprightSprite)
+    {
+        float projectedY = worldScreen.y - 2*cameraTarget.y;
+        worldY = (-projectedY - worldZ * 8.0) * 2.0;
+        worldY += 1028.0;  // tune this value
+
+    }
+
+
+
 
     vec3 pixelWorldPos = vec3(worldX, worldY, worldZ);
 

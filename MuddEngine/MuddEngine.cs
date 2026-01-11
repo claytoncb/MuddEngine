@@ -27,6 +27,7 @@ namespace MuddEngine.MuddEngine
     public static Shader DepthShader;
 
     private static List<Sprite2D> AllSprites = new();
+    int locUprightSprite;
     int locZNorm;
     int locYNorm;
 
@@ -48,7 +49,7 @@ namespace MuddEngine.MuddEngine
             "Assets/Shaders/vertexShader.vs",
             "Assets/Shaders/depth.fs"
         );
-
+        locUprightSprite = Raylib.GetShaderLocation(DepthShader, "uprightSprite");
         locZNorm = Raylib.GetShaderLocation(DepthShader, "zNorm");
         locYNorm = Raylib.GetShaderLocation(DepthShader, "yNorm");
 
@@ -173,6 +174,7 @@ namespace MuddEngine.MuddEngine
 
                 // Shader MUST be active here
                 Raylib.BeginShaderMode(DepthShader);
+                Raylib.SetShaderValue(DepthShader, locUprightSprite, sprite.Upright?1f:0f, ShaderUniformDataType.Float);
                 Raylib.SetShaderValue(DepthShader, locYNorm, yNorm, ShaderUniformDataType.Float);
                 Raylib.SetShaderValue(DepthShader, locZNorm, zNorm, ShaderUniformDataType.Float);
 
