@@ -3,9 +3,9 @@ using Raylib_cs;
 
 namespace MuddEngine.MuddEngine
 {
-    public class Sprite2D : IDrawable
+    public class Sprite2D
     {
-        public Vector3 Position {get; set;}
+        public Vector3 Position;
         public Vector2 Scale;
         public int Size = 32;
         public string Tag = "";
@@ -44,7 +44,7 @@ namespace MuddEngine.MuddEngine
             src = new(Facing * Size, Row * Size, Size, Size);
             dest = new(
                 Position.X - (Scale.X / 2),
-                -(Position.Y * .5f) - (Position.Z * 8f) - (Scale.Y * .5f),
+                -(Position.Y * .5f) - Position.Z - (Scale.Y * .5f),
                 Scale.X,
                 Scale.Y
             );
@@ -99,7 +99,7 @@ namespace MuddEngine.MuddEngine
             src = new(Facing * Size, Row * Size, Size, Size);
             dest = new(
                 Position.X - (Scale.X / 2),
-                -(Position.Y / 2) - (Position.Z * 8) - (Scale.Y / 2),
+                -(Position.Y / 2) - Position.Z - (Scale.Y / 2),
                 Scale.X,
                 Scale.Y
             );

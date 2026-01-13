@@ -15,7 +15,11 @@ namespace MuddEngine.MuddEngine
         public Shader DepthShader;
         int locZNorm;
         int locYNorm;
-        int locHalfHeight;
+        int locMaxZ;
+        int locWorldY;
+        int locSpriteHeight;
+        int locWorldZBase;
+
         Rectangle src;
         Vector2 dest;
         public BufferHandler(Vector2 ScreenSize)
@@ -31,7 +35,11 @@ namespace MuddEngine.MuddEngine
             );
             locZNorm = Raylib.GetShaderLocation(DepthShader, "zNorm");
             locYNorm = Raylib.GetShaderLocation(DepthShader, "yNorm");
-            locHalfHeight = Raylib.GetShaderLocation(DepthShader, "halfHeight");
+            locMaxZ = Raylib.GetShaderLocation(DepthShader, "maxZ");
+            locWorldY      = Raylib.GetShaderLocation(DepthShader, "worldY");
+            locWorldZBase  = Raylib.GetShaderLocation(DepthShader, "worldZBase");
+            locSpriteHeight = Raylib.GetShaderLocation(DepthShader, "spriteHeight");
+
         }
         public void OnLoad( CameraSprite Camera)
         {
@@ -85,22 +93,28 @@ namespace MuddEngine.MuddEngine
             if (Camera != null)
                 Raylib.BeginMode2D(Camera.Camera);
 
-            // Depth pass MUST use alpha blending so sprite silhouettes are preserved
             Raylib.BeginBlendMode(BlendMode.Alpha);
 
             foreach (var sprite in sprites)
             {
-                
                 float yNorm = Math.Clamp(((sprite.Position.Y - Camera.Position.Y) / (MAX_Y * 2)) + 0.5f, 0f, 1f);
                 float zNorm = Math.Clamp(sprite.Position.Z / MAX_Z, 0f, 1f);
-                float spriteHalfHeight = sprite.Scale.Y * 0.5f;
-                float spriteHalfHeightNorm = spriteHalfHeight / MAX_SPRITE_HEIGHT;
-                // Shader MUST be active here
+
+                float spriteHeightWorld = sprite.Scale.Y;   // world‑space height of sprite
+
                 Raylib.BeginShaderMode(DepthShader);
+
                 Raylib.SetShaderValue(DepthShader, locYNorm, yNorm, ShaderUniformDataType.Float);
                 Raylib.SetShaderValue(DepthShader, locZNorm, zNorm, ShaderUniformDataType.Float);
-                Raylib.SetShaderValue(DepthShader, locHalfHeight, spriteHalfHeightNorm, ShaderUniformDataType.Float);
+                Raylib.SetShaderValue(DepthShader, locMaxZ, MAX_Z, ShaderUniformDataType.Float);
+
+                // NEW: pass true worldY and worldZ
+                Raylib.SetShaderValue(DepthShader, locWorldY, sprite.Position.Y, ShaderUniformDataType.Float);
+                Raylib.SetShaderValue(DepthShader, locWorldZBase, sprite.Position.Z, ShaderUniformDataType.Float);
+                Raylib.SetShaderValue(DepthShader, locSpriteHeight, spriteHeightWorld, ShaderUniformDataType.Float);
+
                 sprite.DrawParallax();
+
                 Raylib.EndShaderMode();
             }
 
@@ -111,6 +125,7 @@ namespace MuddEngine.MuddEngine
 
             Raylib.EndTextureMode();
         }
+
         public void WriteBuffers(List<Sprite2D> sprites, float MAX_Y, float MAX_Z, float MAX_SPRITE_HEIGHT)
         {
             WriteBase(sprites);

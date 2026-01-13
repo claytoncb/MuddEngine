@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MuddEngine")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9ab46090a5b2634e247e6f86e476c92a8270bf8d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5f90646159ae03f42f8f454c28f547866818c4b5")]
 [assembly: System.Reflection.AssemblyProductAttribute("MuddEngine")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MuddEngine")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -8,7 +8,7 @@ namespace MuddEngine.MuddEngine
 {
     public abstract class MuddEngine
     {
-        public float MAX_Z = 200000f;
+        public float MAX_Z = 3000f;
         public float MAX_Y = 1000f;
         public float MAX_SPRITE_HEIGHT = 1000f;
 
