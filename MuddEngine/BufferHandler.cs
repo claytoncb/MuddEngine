@@ -127,9 +127,9 @@ namespace MuddEngine.MuddEngine
 
             for (int i = 0; i < sprites.Count; i++)
             {
-                float spriteIDNorm = (sprites.Count > 1)
-                    ? (float)i / (sprites.Count - 1)
-                    : 0.0f;
+                int shiftedID = i + 1; // 1..sprites.Count
+                float spriteIDNorm = (float)shiftedID / (float)(sprites.Count + 1);
+
 
                 Raylib.BeginShaderMode(MetaShader);
                 Raylib.SetShaderValue(MetaShader, locSpriteID, spriteIDNorm, ShaderUniformDataType.Float);

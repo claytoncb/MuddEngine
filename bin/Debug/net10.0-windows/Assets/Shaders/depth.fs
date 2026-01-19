@@ -20,7 +20,7 @@ void main()
     float xOffset = localUV.x * 128.0;
     float xOut    = clamp(xOffset / 128.0, 0.0, 1.0);
 
-    float worldZ  = localUV.y * 128.0 * (1.0 - tex.g);
+    float worldZ  = (1.0 - localUV.y) * 128.0 * (1.0 - tex.g);
     float zOut    = clamp(worldZ / 128.0, 0.0, 1.0);
 
     finalColor = vec4(xOut, 1.0 - tex.r, zOut, tex.a);

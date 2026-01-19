@@ -41,6 +41,9 @@ namespace MuddEngine.MuddEngine
             SheetBase = File.Exists($"Assets/Sprites/{AtlasName}Atlas.png")?Raylib.LoadTexture($"Assets/Sprites/{AtlasName}Atlas.png"):new();
             SheetNormals = File.Exists($"Assets/Sprites/{AtlasName}Normals.png")?Raylib.LoadTexture($"Assets/Sprites/{AtlasName}Normals.png"):new();
             SheetParallax = File.Exists($"Assets/Sprites/{AtlasName}Parallax.png")?Raylib.LoadTexture($"Assets/Sprites/{AtlasName}Parallax.png"):new();
+            Raylib.SetTextureFilter(SheetBase, TextureFilter.Point);
+            Raylib.SetTextureFilter(SheetNormals, TextureFilter.Point);
+            Raylib.SetTextureFilter(SheetParallax, TextureFilter.Point);
             src = new(Facing * Size, Row * Size, Size, Size);
             dest = new(
                 Position.X - (Scale.X / 2),

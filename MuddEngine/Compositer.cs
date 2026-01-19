@@ -7,26 +7,31 @@ namespace MuddEngine.MuddEngine
     public class Compositer
     {
         public Shader Shader;
-
+        public CameraSprite Camera;
+        public int locCameraTarget;
+        public int locCameraOffset;
+        public int locCameraZoom;
+        public int locCameraRotation;
         public int locBaseTex;
         public int locNormalTex;
         public int locDepthTex;
         public int locMetaTex;
         public int locScreenSize;
-
         public int locLightCount;
         public int locLightPos;
         public int locLightColor;
-
         public int locSpriteWorldPosArray;
         public int locSpriteCount;
-
         public Compositer()
         {
             Shader = Raylib.LoadShader(
                 "Assets/Shaders/vertexShader.vs",
                 "Assets/Shaders/composite.fs"
             );
+            locCameraTarget   = Raylib.GetShaderLocation(Shader, "cameraTarget");
+            locCameraOffset   = Raylib.GetShaderLocation(Shader, "cameraOffset");
+            locCameraZoom     = Raylib.GetShaderLocation(Shader, "cameraZoom");
+            locCameraRotation = Raylib.GetShaderLocation(Shader, "cameraRotation");
 
             locBaseTex    = Raylib.GetShaderLocation(Shader, "baseTex");
             locNormalTex  = Raylib.GetShaderLocation(Shader, "normalTex");
@@ -49,7 +54,10 @@ namespace MuddEngine.MuddEngine
             if (locNormalTex != -1)
                 Raylib.SetShaderValue(Shader, locNormalTex, new int[] { 2 }, ShaderUniformDataType.Int);
         }
-
+        public void OnLoad(CameraSprite Camera)
+        {
+            this.Camera = Camera;
+        }
         public void Draw(
             RenderTexture2D baseBuffer,
             RenderTexture2D normalBuffer,
@@ -82,12 +90,22 @@ namespace MuddEngine.MuddEngine
             for (int i = 0; i < sprites.Count && i < 512; i++)
             {
                 var s = sprites[i];
-                spriteWorldPosArray[i * 3 + 0] = s.Position.X;
-                spriteWorldPosArray[i * 3 + 1] = s.Position.Y;
-                spriteWorldPosArray[i * 3 + 2] = s.Position.Z;
+                spriteWorldPosArray[i*3+0] = s.Position.X - (s.Scale.X * 0.5f);
+                spriteWorldPosArray[i*3+1] = s.Position.Y + (s.Scale.Y * 0.5f);
+                spriteWorldPosArray[i*3+2] = s.Position.Z;
+
             }
 
             Raylib.BeginShaderMode(Shader);
+            if (Camera != null)
+            {
+                var cam = Camera.Camera; // CameraSprite has `public Camera2D Camera;`
+
+                Raylib.SetShaderValue(Shader, locCameraTarget,   cam.Target,   ShaderUniformDataType.Vec2);
+                Raylib.SetShaderValue(Shader, locCameraOffset,   cam.Offset,   ShaderUniformDataType.Vec2);
+                Raylib.SetShaderValue(Shader, locCameraZoom,     cam.Zoom,     ShaderUniformDataType.Float);
+                Raylib.SetShaderValue(Shader, locCameraRotation, cam.Rotation, ShaderUniformDataType.Float);
+            }
 
             Raylib.SetShaderValue(Shader, locScreenSize, screenSize, ShaderUniformDataType.Vec2);
 

@@ -32,6 +32,7 @@ namespace MuddEngine.MuddEngine
 
             OnLoad();
             BufferHandler.OnLoad(Camera);
+            Compositer.OnLoad(Camera);
 
             GameLoop();
 
