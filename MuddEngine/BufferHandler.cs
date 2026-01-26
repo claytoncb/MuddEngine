@@ -101,7 +101,7 @@ namespace MuddEngine.MuddEngine
             foreach (var sprite in sprites)
             {
                 Raylib.BeginShaderMode(DepthShader);
-                Raylib.SetShaderValue(DepthShader, locSpriteAtlasPos, new Vector2(sprite.Facing, sprite.Row), ShaderUniformDataType.Vec2);
+                Raylib.SetShaderValue(DepthShader, locSpriteAtlasPos, new Vector2(sprite.StateIndex, sprite.Facing * 3 + sprite.State), ShaderUniformDataType.Vec2);
                 Raylib.SetShaderValue(DepthShader, locFrameSize, (float)sprite.Size, ShaderUniformDataType.Float);
                 Raylib.SetShaderValue(DepthShader, locAtlasSize, sprite.SheetBase.Dimensions, ShaderUniformDataType.Vec2);
                 sprite.DrawParallax();

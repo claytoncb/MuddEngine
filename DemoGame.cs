@@ -20,23 +20,18 @@ namespace MuddEngine
         public DemoGame() : base("test",new Vector2(2048,1024)) {}
         public override void OnLoad()
         {
-            player = new Player(new Vector3(0,0,50f),"PlayerHead",0, 150f,"Sprite");
+            player = new Player(new Vector3(0,0,0.1f),"PlayerHead",0, 150f,"Conductor");
+
             Camera = new CameraSprite(player, new Vector2(2048, 1024));
-            light1 = new LightSource(new Vector3(0,0,220f), 2400f,1.0f, Raylib_cs.Color.Blue, "BlueLight");
+
+            light1 = new LightSource(new Vector3(0,0,100f), 2400f,1.0f, Raylib_cs.Color.Blue, "BlueLight");
             AddLight(light1);
-            ceilingLight1 = new Sprite2D(new Vector3(0,-64, 220f), "CeilingLight1",1, 0f,"Sprite");
-
-            light2 = new LightSource(new Vector3(512,0,220f), 800f, 1.0f, Raylib_cs.Color.Red, "RedLight");
+            light2 = new LightSource(new Vector3(512,0,100f), 800f, 1.0f, Raylib_cs.Color.Red, "RedLight");
             AddLight(light2);
-            ceilingLight2 = new Sprite2D(new Vector3(512,0, 50f), "CeilingLight2",1, 0f,"Sprite");
-
-            light3 = new LightSource(new Vector3(-512,0,220f), 800f, 1.0f, Raylib_cs.Color.Green, "GreenLight");
+            light3 = new LightSource(new Vector3(-512,0,100f), 800f, 1.0f, Raylib_cs.Color.Green, "GreenLight");
             AddLight(light3);
-            //ceilingLight3 = new Sprite2D(new Vector3(-512,0, 220f), "CeilingLight3",1, 0f,"Sprite");
-
-            light4 = new LightSource(new Vector3(-1024,0,220f), 800f, 1.0f, Raylib_cs.Color.White, "WhiteLight");
+            light4 = new LightSource(new Vector3(-1024,0,100f), 800f, 1.0f, Raylib_cs.Color.White, "WhiteLight");
             AddLight(light4);
-            //ceilingLight4 = new Sprite2D(new Vector3(-1024,0, 220f), "CeilingLight4",1, 0f,"Sprite");
             for (int j = 0; j < 3; j++)
             {
                 for (int i = 0; i < 20; i++)
@@ -47,7 +42,7 @@ namespace MuddEngine
         }
 
 
-        public override void OnUpdate(float dt)
+        public override void OnUpdate(float dt, float t)
         {
             //light1.Position.Z = player.Position.Y;
         }

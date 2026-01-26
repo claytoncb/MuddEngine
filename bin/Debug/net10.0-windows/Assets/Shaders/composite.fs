@@ -199,7 +199,7 @@ void main()
         float shadowFactor = 1.0 - shadow;
 
         vec3 directLight = ComputeLighting(pixelWorldPos, normal, lightWorldPos, lightColor[i]);
-        totalLight += directLight * shadowFactor;
+        totalLight += directLight;// * shadowFactor;
     }
 
     totalLight = clamp(totalLight, 0.0, 2.0);

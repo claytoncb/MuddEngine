@@ -10,7 +10,7 @@ namespace MuddEngine.MuddEngine
         {
         }
 
-        public override void Update(float dt, Keyboard keyboard)
+        public override void Update(float dt, float t, Keyboard keyboard)
         {
             Vector2 direction = keyboard.Direction();
 
@@ -18,7 +18,7 @@ namespace MuddEngine.MuddEngine
 
             Facing = GetFacing(direction);
 
-            base.Update(dt, keyboard);
+            base.Update(dt, t, keyboard);
         }
     }
 }

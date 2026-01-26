@@ -19,9 +19,9 @@ namespace MuddEngine
                 Color c = bmp.GetPixel(x, y);
 
                 // Invert red and green channels
-                byte r = c.R;
-                byte g = (byte)(255 - c.B);
-                byte b = (byte)(255 - c.G);   // leave blue unchanged
+                byte r = (byte)255;
+                byte g = (byte)0;
+                byte b = (byte)0;   // leave blue unchanged
                 byte a = c.A;
 
                 bmp.SetPixel(x, y, Color.FromArgb(a, r, g, b));
@@ -34,7 +34,7 @@ namespace MuddEngine
         public static void Main()
         {
             DemoGame game = new();
-            InvertRedGreen(@"C:\Users\clayt\OneDrive\Documents\Sprites\normal_circle_16.png",@"C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0-windows\Assets\Sprites\NormalsCircle.png");
+            //InvertRedGreen(@"C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0-windows\Assets\Sprites\ConductorNormals.png",@"C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0-windows\Assets\Sprites\ConductorParallax.png");
         }
     }
 }

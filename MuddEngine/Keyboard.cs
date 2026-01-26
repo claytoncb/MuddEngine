@@ -83,7 +83,7 @@ namespace MuddEngine.MuddEngine
             bool holdingSpace = Raylib.IsKeyDown(KeyboardKey.Space);
             bool hasStamina = Stamina == 100f;
             if (holdingSpace && hasStamina && Moving) Dashing = true;
-            if (Stamina == 0) Dashing = false;
+            if (Stamina == 0 || !holdingSpace) Dashing = false;
             Speed += (Dashing?1f:-1f) * DashAcceleration * dt;
             return new(Math.Max(Math.Min(Speed,SprintSpeed), holdingSpace?1.001f:1f), Dashing);
         }

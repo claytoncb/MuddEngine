@@ -25,6 +25,9 @@ namespace MuddEngine.MuddEngine
         public bool Upright;
         public Raylib_cs.Rectangle src;
         public Raylib_cs.Rectangle dest;
+        public int State = 0;
+        public float StateChange;
+        public int StateIndex = 0;
 
         public Sprite2D(Vector3 Position, string Tag, int Row, float Speed, string AtlasName, bool upright=true)
         {
@@ -44,7 +47,7 @@ namespace MuddEngine.MuddEngine
             Raylib.SetTextureFilter(SheetBase, TextureFilter.Point);
             Raylib.SetTextureFilter(SheetNormals, TextureFilter.Point);
             Raylib.SetTextureFilter(SheetParallax, TextureFilter.Point);
-            src = new(Facing * Size, Row * Size, Size, Size);
+            src = new(StateIndex * Size, (Facing * 3 + State) * Size, Size, Size);
             dest = new(
                 Position.X - (Scale.X / 2),
                 -(Position.Y * .5f) - Position.Z - (Scale.Y * .5f),
@@ -94,12 +97,12 @@ namespace MuddEngine.MuddEngine
             );
         }
 
-        public virtual void Update(float dt, Keyboard keyboard)
+        public virtual void Update(float dt, float t, Keyboard keyboard)
         {
             // Base sprite does NOT handle movement or dashing anymore.
             Vector2 movement = Movement * dt * Speed;
             Position += new Vector3(movement.X,movement.Y,0);
-            src = new(Facing * Size, Row * Size, Size, Size);
+            src = new(StateIndex * Size, (Facing * 3 + State) * Size, Size, Size);
             dest = new(
                 Position.X - (Scale.X / 2),
                 -(Position.Y / 2) - Position.Z - (Scale.Y / 2),
@@ -112,7 +115,7 @@ namespace MuddEngine.MuddEngine
         {
             // Optional: deadzone to avoid jitter
             const float eps = 0.0001f;
-            int direction;
+            int direction = 0;
             // Normalize if needed
             if (dir.LengthSquared() > 1f)
                 dir = Vector2.Normalize(dir);
@@ -121,15 +124,16 @@ namespace MuddEngine.MuddEngine
                 return Facing;
             }
                 //Left/Right
-            if (dir.X < -eps)
-                direction=1;
-            else if (dir.X > eps)
+            if ((dir.X < -eps) || (dir.X > eps))
+            {
+                direction=(dir.X > eps)?2:3;
+                if (dir.Y > eps) direction += 2;
+            }
+            //no X entered, up or down
+            else if (dir.Y < -eps)
                 direction=0;
-            else 
-                direction = Facing%2;
-            // Up/Down
-            if (dir.Y > eps)
-                direction+=2;
+            else if (dir.Y > eps)
+                direction=1;
             
             // Default fallback (no movement)
             return direction; // or whatever your idle facing is

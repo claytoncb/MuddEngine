@@ -21,7 +21,7 @@ namespace MuddEngine.MuddEngine
             Camera.Zoom     = 1f;
         }
 
-        public void Update(float dt)
+        public void Update(float dt, float t)
         {
             // Follow the player
             Position = Player.Position;

@@ -11,6 +11,7 @@ namespace MuddEngine.MuddEngine
         public Color BackgroundColor = Color.Black;
         public Keyboard Keyboard = new Keyboard();
         private Stopwatch Stopwatch = new();
+        private Stopwatch LoopStopwatch = new();
         public Vector2 ScreenSize;
 
         public static CameraSprite Camera;
@@ -33,7 +34,7 @@ namespace MuddEngine.MuddEngine
             OnLoad();
             BufferHandler.OnLoad(Camera);
             Compositer.OnLoad(Camera);
-
+            Stopwatch.Start();
             GameLoop();
 
             Raylib.UnloadShader(Compositer.Shader);
@@ -49,19 +50,20 @@ namespace MuddEngine.MuddEngine
 
         private void GameLoop()
         {
-            Stopwatch.Start();
+            LoopStopwatch.Start();
             int view = 5;
 
             while (!Raylib.WindowShouldClose())
             {
-                float dt = (float)Stopwatch.Elapsed.TotalSeconds;
-                Stopwatch.Restart();
+                float dt = (float)LoopStopwatch.Elapsed.TotalSeconds;
+                float t = (float)Stopwatch.Elapsed.TotalSeconds;
+                LoopStopwatch.Restart();
 
                 foreach (var sprite in AllSprites)
-                    sprite.Update(dt, Keyboard);
+                    sprite.Update(dt, t, Keyboard);
 
-                OnUpdate(dt);
-                Camera.Update(dt);
+                OnUpdate(dt, t);
+                Camera.Update(dt, t);
 
                 var spritesByDepth = AllSprites
                     .OrderBy(s => s.Position.Z)
@@ -112,7 +114,7 @@ namespace MuddEngine.MuddEngine
         }
 
         public abstract void OnLoad();
-        public abstract void OnUpdate(float dt);
+        public abstract void OnUpdate(float dt, float t);
         public abstract void OnDraw();
     }
 }
