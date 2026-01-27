@@ -106,7 +106,41 @@ vec2 EncodeDepthXY(vec3 worldPos)
     // Depth pass currently uses X = worldX, Y = -worldY.
     return vec2(worldPos.x, worldPos.y);
 }
+bool isBetweenScreenHeight(vec3 pixel, vec3 blocker, vec3 light, float maxDist)
+{
+    // 1. Work in screen plane: X (right), Y (up on screen) == your X,Z
+    vec2 pixel2D   = vec2(pixel.x,   pixel.z);
+    vec2 blocker2D = vec2(blocker.x, blocker.z);
+    vec2 light2D   = vec2(light.x,   light.z);
 
+    vec2 ray2D   = light2D - pixel2D;
+    float rayLen = length(ray2D);
+    if (rayLen <= 0.0001)
+        return false;
+
+    vec2 rayDir2D = ray2D / rayLen;
+
+    // 2. Project blocker onto 2D ray in screen space
+    vec2 v2D = blocker2D - pixel2D;
+    float t  = dot(v2D, rayDir2D);
+
+    // Must lie between pixel and light in screen space
+    if (t <= 0.0 || t >= rayLen)
+        return false;
+
+    // 3. Lateral distance in screen space
+    float distToRay = length(v2D - rayDir2D * t);
+    if (distToRay > maxDist)
+        return false;
+
+    // 4. Heightfield rule: Z (height) between pixel and light
+    if (blocker.z <= pixel.z)
+        return false;
+    if (blocker.z >= light.z)
+        return false;
+
+    return true;
+}
 // ------------------------------------------------------------
 // Shadow raymarch
 // ------------------------------------------------------------
@@ -163,11 +197,11 @@ float TraceShadow(vec3 pixelWorldPos, int pixelSpriteID, vec3 lightWorldPos)
         vec3 blockerWorldPos = ReconstructPixelWorldPos(sampleUV);
 
         // Heightfield occlusion: blocker must be above the sample and below the light.
-        if (blockerWorldPos.z >= sampleWorldPos.z + BIAS &&
-            blockerWorldPos.z <= lightWorldPos.z - BIAS)
+        if (isBetweenScreenHeight(pixelWorldPos, blockerWorldPos, lightWorldPos, 1.5))
         {
             return 1.0;
         }
+
     }
 
     return 0.0;
@@ -199,7 +233,7 @@ void main()
         float shadowFactor = 1.0 - shadow;
 
         vec3 directLight = ComputeLighting(pixelWorldPos, normal, lightWorldPos, lightColor[i]);
-        totalLight += directLight;// * shadowFactor;
+        totalLight += directLight * shadowFactor;
     }
 
     totalLight = clamp(totalLight, 0.0, 2.0);

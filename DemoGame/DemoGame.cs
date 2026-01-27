@@ -20,7 +20,7 @@ namespace MuddEngine
         public DemoGame() : base("test",new Vector2(2048,1024)) {}
         public override void OnLoad()
         {
-            player = new Player(new Vector3(0,0,0.1f),"PlayerHead",0, 150f,"Conductor");
+            player = new Player(new Vector3(0,0,0.01f),"PlayerHead",0, 150f,"Conductor");
 
             Camera = new CameraSprite(player, new Vector2(2048, 1024));
 
@@ -36,7 +36,7 @@ namespace MuddEngine
             {
                 for (int i = 0; i < 20; i++)
                 {
-                    Sprite2D Tile = new Sprite2D(new Vector3(-1536 + 128*i,64 - 128*j,0),$"Tile{i}-{j}",0,0,"Tile", false);
+                    Sprite2D Tile = new Sprite2D(new Vector3(-1536 + 128*i,32 - 128*j,0),$"Tile{i}-{j}",0,0,"Tile", false);
                 }
             }
         }
