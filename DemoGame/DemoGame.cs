@@ -4,39 +4,39 @@ using System.Security.Principal;
 using MuddEngine.MuddEngine;
 using Raylib_cs;
 
-namespace MuddEngine
+namespace MuddEngine.DemoGame
 {
     class DemoGame : MuddEngine.MuddEngine
     {
         Player player;
         LightSource light1;
-        Sprite2D ceilingLight1;
+        Sprite ceilingLight1;
         LightSource light2;
-        Sprite2D ceilingLight2;
+        Sprite ceilingLight2;
         LightSource light3;
-        Sprite2D ceilingLight3;
+        Sprite ceilingLight3;
         LightSource light4;
-        Sprite2D ceilingLight4;
+        Sprite ceilingLight4;
         public DemoGame() : base("test",new Vector2(2048,1024)) {}
         public override void OnLoad()
         {
-            player = new Player(new Vector3(0,0,0.01f),"PlayerHead",0, 150f,"Conductor");
+            player = new Player("Conductor",new Vector3(0,0,0.01f),0.5f);
 
             Camera = new CameraSprite(player, new Vector2(2048, 1024));
 
-            light1 = new LightSource(new Vector3(0,0,100f), 2400f,1.0f, Raylib_cs.Color.Blue, "BlueLight");
-            AddLight(light1);
-            light2 = new LightSource(new Vector3(512,0,100f), 800f, 1.0f, Raylib_cs.Color.Red, "RedLight");
-            AddLight(light2);
-            light3 = new LightSource(new Vector3(-512,0,100f), 800f, 1.0f, Raylib_cs.Color.Green, "GreenLight");
-            AddLight(light3);
-            light4 = new LightSource(new Vector3(-1024,0,100f), 800f, 1.0f, Raylib_cs.Color.White, "WhiteLight");
-            AddLight(light4);
-            for (int j = 0; j < 3; j++)
+            light1 = new LightSource(new Vector3(128,0,100f), 400f,2.0f, new Raylib_cs.Color(80,122,255));
+            light2 = new LightSource(new Vector3(512,0,100f), 400f, 2.0f, new Raylib_cs.Color(250,100,100));
+            light3 = new LightSource(new Vector3(-128,0,100f), 400f, 2.0f, new Raylib_cs.Color(40,250,150));
+            light4 = new LightSource(new Vector3(-512,0,100f), 400f, 2.0f, new Raylib_cs.Color(255,255,255));
+            for (int j = 0; j < 2; j++)
             {
-                for (int i = 0; i < 20; i++)
+                for (int i = 0; i < 64; i++)
                 {
-                    Sprite2D Tile = new Sprite2D(new Vector3(-1536 + 128*i,32 - 128*j,0),$"Tile{i}-{j}",0,0,"Tile", false);
+                    Sprite Tile = new Sprite($"Tile{i}-{j}",new Vector3(-768 + 32*i,32 - 32*j,0),0);
+                    Tile.SheetLocation = new((j==0?32:0) + (i==0?128:0) + (i==63?64:0),576);
+                    Tile.VisibleSize = new(32,16);
+                    Tile.VisibleOffset = new(0,7);
+                    Tile.isFlat = true;
                 }
             }
         }

@@ -33,8 +33,8 @@ namespace MuddEngine
 }
         public static void Main()
         {
-            DemoGame game = new();
-            //InvertRedGreen(@"C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0-windows\Assets\Sprites\ConductorNormals.png",@"C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0-windows\Assets\Sprites\ConductorParallax.png");
+            DemoGame.DemoGame game = new();
+            //InvertRedGreen(@"C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0-windows\Assets\Sprites\Normal.png",@"C:\Users\clayt\Documents\CsharpApps\MuddEngine\bin\Debug\net10.0-windows\Assets\Sprites\Depth.png");
         }
     }
 }

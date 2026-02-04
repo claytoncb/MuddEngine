@@ -7,25 +7,25 @@ namespace MuddEngine.MuddEngine
     {
         public Camera2D Camera;
         public Vector3 Position;
-        private Player Player;
+        private MuddObject Target;
 
-        public CameraSprite(Player player, Vector2 screenSize)
+        public CameraSprite(MuddObject Target, Vector2 screenSize)
         {
-            Player = player;
+            this.Target = Target;
             // Start at the player's position
-            Position = player.Position;
+            Position = Target.GetPosition();
             Camera = new Camera2D();
-            Camera.Target   = new Vector2(Position.X, -(Position.Y / 2) - Position.Z);
+            Camera.Target   = new Vector2(Position.X, (Position.Y / 2) + Position.Z);
             Camera.Offset   = screenSize / 2f;   // center of screen
             Camera.Rotation = 0f;
-            Camera.Zoom     = 1f;
+            Camera.Zoom     = 4f;
         }
 
         public void Update(float dt, float t)
         {
             // Follow the player
-            Position = Player.Position;
-            Camera.Target = new Vector2(Position.X, -(Position.Y / 2) - Position.Z);
+            Position = Target.GetPosition();
+            Camera.Target = new Vector2(Position.X, (Position.Y / 2) + Position.Z);
         }
     }
 }
