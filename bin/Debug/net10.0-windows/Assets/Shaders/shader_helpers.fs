@@ -79,14 +79,16 @@ vec3 computePixelWorldPos(
 }
 
 // Convert (spriteIndex, rowIndex) to texel coordinates
+const int ROWS_PER_SPRITE   = 8;              // or whatever you use
+
 ivec2 spriteTexelCoord(int spriteIndex, int rowIndex)
 {
-    int x = rowIndex;
-
-    int y = spriteIndex;
-
+    int linear = spriteIndex * ROWS_PER_SPRITE + rowIndex;
+    int x = linear % u_MaxSprites;
+    int y = linear / u_MaxSprites;
     return ivec2(x, y);
 }
+
 
 vec4 readRow(sampler2D tex, int spriteIndex, int rowIndex)
 {

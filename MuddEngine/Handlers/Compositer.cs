@@ -146,7 +146,6 @@ namespace MuddEngine.MuddEngine
                 Vector2 scaledFrame = obj.Size * Camera.Camera.Zoom;
                 Vector2 bottomLeft  = screenCenter - scaledFrame * 0.5f;
                 int rowIndex = objectIndex * 32;
-                Console.WriteLine(pos);
                 spriteBuffer[rowIndex + 0] = pos.X;
                 spriteBuffer[rowIndex + 1] = pos.Y;
                 spriteBuffer[rowIndex + 2] = pos.Z;

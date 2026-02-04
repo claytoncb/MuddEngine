@@ -118,14 +118,16 @@ vec3 computePixelWorldPos(
 }
 
 // Convert (spriteIndex, rowIndex) to texel coordinates
+const int ROWS_PER_SPRITE   = 8;              // or whatever you use
+
 ivec2 spriteTexelCoord(int spriteIndex, int rowIndex)
 {
-    int x = rowIndex;
-
-    int y = spriteIndex;
-
+    int linear = spriteIndex * ROWS_PER_SPRITE + rowIndex;
+    int x = linear % u_MaxSprites;
+    int y = linear / u_MaxSprites;
     return ivec2(x, y);
 }
+
 
 vec4 readRow(sampler2D tex, int spriteIndex, int rowIndex)
 {
@@ -151,6 +153,40 @@ vec4 readVec4(sampler2D tex, int spriteIndex, int rowIndex)
 {
     return readRow(tex, spriteIndex, rowIndex);
 }
+vec4 print()
+{
+    if (muddObjectCount <= 0) discard;
+
+    // Protect against zero height
+    float h = max(screenSize.y, 1.0);
+
+    // Height of each strip in pixels (may be <1 if many objects)
+    float stripH = h / float(max(muddObjectCount, 1));
+
+    // Compute index from fragment Y (gl_FragCoord.y origin is bottom-left)
+    int idx = int(floor(gl_FragCoord.y / stripH));
+    idx = clamp(idx, 0, muddObjectCount - 1);
+
+    // Read world position for this index (uniform array uploaded from CPU)
+    vec3 wp       = readVec3(u_SpriteData, idx, 0);
+
+    // Map world coords -> color. Tune scale/bias to your world extents.
+    // Example mapping: shift X into [0..1], scale Y down, use Z directly (clamped).
+    vec3 col = vec3(
+        clamp((wp.x + 800.0) / 2000.0, 0.0, 1.0),
+        clamp(wp.y / 32.0, 0.0, 1.0),
+        clamp((wp.z + 128.0) / 256.0, 0.0, 1.0)
+    );
+
+    // Optional thin separators between strips for readability
+    float localY = mod(gl_FragCoord.y, stripH);
+    float edgePx = 1.0; // pixels
+    if (stripH >= 2.0 && (localY < edgePx || localY > stripH - edgePx))
+        col *= 0.15;
+
+
+    return vec4(col, 1.0);
+}
 // ------------------------------------------------------------
 // helpers are concatenated before this file by ShaderLoader
 // ------------------------------------------------------------
@@ -168,9 +204,9 @@ void main()
     for (int i = 0; i < muddObjectCount; ++i)
     {
         vec3 worldPosBase       = readVec3(u_SpriteData, i, 0);
-        vec2 spriteBottomLeft          = readVec2(u_SpriteData, i, 1);
-        vec2 frameSize               = readVec2(u_SpriteData, i, 2);
-        vec2 sheetLocation           = readVec2(u_SpriteData, i, 3);
+        vec2 spriteBottomLeft   = readVec2(u_SpriteData, i, 1);
+        vec2 frameSize          = readVec2(u_SpriteData, i, 2);
+        vec2 sheetLocation      = readVec2(u_SpriteData, i, 3);
         vec2 atlasOrigin        = readVec2(u_SpriteData, i, 4);
         vec2 visibleOffset      = readVec2(u_SpriteData, i, 5);
         vec2 visibleSize        = readVec2(u_SpriteData, i, 6);
@@ -185,14 +221,15 @@ void main()
         vec2 minB = spriteBottomLeft + scaledOffset;
         vec2 maxB = minB + scaledVisible;
 
-
-        // skip if fragment outside this sprite's quad
-        if (fragOutsideQuad(frag, minB, maxB) && debugMode != 6)
-    continue;
-
-
         // local (0..1) inside the scaled visible quad
         vec2 local = computeLocalUV(frag, minB, maxB);
+
+        if (debugMode == 6)
+        {
+            finalColor = print();
+            return;
+        }
+        if (fragOutsideQuad(frag, minB, maxB) && debugMode != 6) continue;
 
         // pixel-space coordinate inside the atlas (unflipped)
         vec2 pixelCoord = pixelCoordFromLocal(
@@ -228,7 +265,7 @@ void main()
             src = fetchAtlasTexel(u_BaseAtlas, pixelCoord, atlasSize, FLIP_ATLAS_Y);
         }
 
-        if (isTransparent(src) && debugMode != 6)
+        if (isTransparent(src))
             continue;
 
         // If debugMode 4, compute lighting using normals + per-pixel world position
@@ -241,8 +278,8 @@ void main()
             //litSrc = vec4(offs, 1.0);
             litSrc = vec4(0.0,0.0,0.0, 1.0);
         }
-        // --- DebugMode 5: full lighting using world-space per-pixel positions ---
-        if (debugMode == 5)
+        // --- DebugMode 0: full lighting using world-space per-pixel positions ---
+        if (debugMode == 0)
         {
             // sample normal map at same atlas pixel
             vec3 normal = sampleNormalAtPixel(
@@ -275,42 +312,6 @@ void main()
 
             litSrc = vec4(src.rgb * lighting, src.a);
         }
-        // Debug mode 6: full-screen horizontal strips encoding worldPositions
-        if (debugMode == 6)
-        {
-            if (muddObjectCount <= 0) discard;
-
-            // Protect against zero height
-            float h = max(screenSize.y, 1.0);
-
-            // Height of each strip in pixels (may be <1 if many objects)
-            float stripH = h / float(max(muddObjectCount, 1));
-
-            // Compute index from fragment Y (gl_FragCoord.y origin is bottom-left)
-            int idx = int(floor(gl_FragCoord.y / stripH));
-            idx = clamp(idx, 0, muddObjectCount - 1);
-
-            // Read world position for this index (uniform array uploaded from CPU)
-            vec3 wp       = readVec3(u_SpriteData, idx, 0);
-
-            // Map world coords -> color. Tune scale/bias to your world extents.
-            // Example mapping: shift X into [0..1], scale Y down, use Z directly (clamped).
-            vec3 col = vec3(
-                clamp((wp.x + 800.0) / 2000.0, 0.0, 1.0),
-                clamp(wp.y / 32.0, 0.0, 1.0),
-                clamp((wp.z + 128.0) / 256.0, 0.0, 1.0)
-            );
-
-            // Optional thin separators between strips for readability
-            float localY = mod(gl_FragCoord.y, stripH);
-            float edgePx = 1.0; // pixels
-            if (stripH >= 2.0 && (localY < edgePx || localY > stripH - edgePx))
-                col *= 0.15;
-
-            finalColor = vec4(col, 1.0);
-            return;
-        }
-
 
         accum = compositeOver(litSrc, accum);
 

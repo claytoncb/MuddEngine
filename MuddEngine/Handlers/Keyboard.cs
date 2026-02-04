@@ -8,7 +8,7 @@ namespace MuddEngine.MuddEngine
         private static HashSet<Keys> keysDown = new();
         private static KeyboardKey lastHorizontal;
         private static KeyboardKey lastVertical;
-        public static int DebugMode = 6;
+        public static int DebugMode = 0;
 
         public static void KeyDown(object sender, KeyEventArgs e)
         {
@@ -38,6 +38,10 @@ namespace MuddEngine.MuddEngine
         // Sets DebugMode to 1, 2, or 3 when those keys are pressed (top row or numpad)
         private static void UpdateDebugMode()
         {
+            if (Raylib.IsKeyPressed(KeyboardKey.One) || Raylib.IsKeyPressed(KeyboardKey.Kp0))
+            {
+                DebugMode = 0;
+            }
             if (Raylib.IsKeyPressed(KeyboardKey.One) || Raylib.IsKeyPressed(KeyboardKey.Kp1))
             {
                 DebugMode = 1;
