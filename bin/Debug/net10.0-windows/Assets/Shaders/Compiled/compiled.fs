@@ -19,6 +19,8 @@ uniform int  debugMode;      // debug mode 1,2,3,4
 uniform vec2 screenSize;     // window size in pixels
 uniform vec2 atlasSize;      // atlas size in pixels (width, height)
 uniform int   muddObjectCount;
+
+uniform vec3 cameraPosition;
 uniform vec2  cameraOffset;
 uniform vec2  cameraTarget;
 uniform float cameraZoom;
@@ -36,15 +38,17 @@ uniform vec3  lightColors[MAX_LIGHTS];
 
 out vec4 finalColor;
 
-
+// ------------------------------------------------------------
+// helpers are concatenated before this file by ShaderLoader
+// ------------------------------------------------------------
 const float EPS_ALPHA = 0.001;
 
 bool fragOutsideQuad(vec2 f, vec2 a, vec2 b) {
     return f.x < a.x || f.x > b.x || f.y < a.y || f.y > b.y;
 }
 
-vec2 computeLocalUV(vec2 f, vec2 a, vec2 b) {
-    return (f - a) / (b - a);
+vec2 computeLocalUV(vec2 frag, vec2 minB, vec2 maxB) {
+    return (frag - minB) / (maxB - minB);
 }
 
 vec2 pixelCoordFromLocal(vec2 o, vec2 s, vec2 l, vec2 vo, vec2 vs) {
@@ -83,7 +87,7 @@ vec3 sampleNormalAtPixel(sampler2D n, vec2 p, vec2 sz, bool flipY) {
 }
 
 vec3 computeLightingWithNormals(
-    vec3 wp, vec2 frag, vec3 N,
+    vec3 wp, vec3 N,
     int lc,
     vec3 lp[8], float lr[8], float li[8], vec3 lc0[8])
 {
@@ -108,14 +112,27 @@ vec3 computeLightingWithNormals(
 }
 
 vec3 computePixelWorldPos(
-    vec2 fw,
-    vec3 wp, bool isFlat)
-{
-    vec3 b = wp;
-    return (isFlat)
-        ? vec3(fw.x, fw.y, b.z)
-        : vec3(fw.x, b.y, fw.y);
+    vec2 texelCoord,      // pixel inside sprite, in texels
+    vec3 spriteWorldPos,  // bottom-left-front of sprite
+    bool isFlat
+){
+    if (isFlat) {
+        // flat on ground
+        return vec3(
+            spriteWorldPos.x + texelCoord.x,
+            spriteWorldPos.y + texelCoord.y,
+            spriteWorldPos.z
+        );
+    } else {
+        // vertical billboard
+        return vec3(
+            spriteWorldPos.x + texelCoord.x,
+            spriteWorldPos.y,
+            spriteWorldPos.z + texelCoord.y
+        );
+    }
 }
+
 
 // Convert (spriteIndex, rowIndex) to texel coordinates
 const int ROWS_PER_SPRITE   = 8;              // or whatever you use
@@ -187,9 +204,56 @@ vec4 print()
 
     return vec4(col, 1.0);
 }
-// ------------------------------------------------------------
-// helpers are concatenated before this file by ShaderLoader
-// ------------------------------------------------------------
+vec4 lighting(vec2 pixelCoord, vec2 texelCoord, vec3 worldPosBase, bool isFlat, vec4 src, bool FLIP_ATLAS_Y) {
+    // sample normal map at same atlas pixel
+    vec3 normal = sampleNormalAtPixel(
+        u_NormalsAtlas,
+        pixelCoord,
+        atlasSize,
+        FLIP_ATLAS_Y
+    );
+
+
+    // use the existing helper to get per-pixel world position
+    vec3 pixelWorldPos = computePixelWorldPos(
+        texelCoord,
+        worldPosBase, 
+        isFlat
+    );
+
+    vec3 lighting = computeLightingWithNormals(
+        pixelWorldPos,
+        normal,
+        lightCount,
+        lightPositions,
+        lightRadii,
+        lightIntensities,
+        lightColors
+    );
+
+    return vec4(src.rgb * lighting, src.a);
+}
+vec4 showPixelPositions(vec2 texelCoord, vec3 worldPosBase, bool isFlat)
+{
+    // world offset from camera center
+    vec3 pixelWorldPos = computePixelWorldPos(
+        texelCoord,
+        worldPosBase, 
+        isFlat
+    );
+
+    vec3 offset = pixelWorldPos - cameraPosition;
+
+    float worldWidth  = screenSize.x;
+    float worldHeight = screenSize.y;
+
+    float nx = offset.x / worldWidth  + 0.5;
+    float ny = offset.y / worldHeight + 0.5;
+    float nz = offset.z / 32.0;
+
+    return vec4(nx, ny, nz, 1.0);
+}
+
 
 void main()
 {
@@ -223,6 +287,7 @@ void main()
 
         // local (0..1) inside the scaled visible quad
         vec2 local = computeLocalUV(frag, minB, maxB);
+        vec2 texelCoord = visibleOffset + floor(local * visibleSize);
 
         if (debugMode == 6)
         {
@@ -274,43 +339,12 @@ void main()
         // --- DebugMode 4: sprite-local X/Y/Z visualization ---
         if (debugMode == 4)
         {
-            //vec3 offs = computeSpriteLocalOffsets(i, local, visibleSizes[i], isFlat);
-            //litSrc = vec4(offs, 1.0);
-            litSrc = vec4(0.0,0.0,0.0, 1.0);
+            litSrc = showPixelPositions(texelCoord, worldPosBase, isFlat);
         }
         // --- DebugMode 0: full lighting using world-space per-pixel positions ---
         if (debugMode == 0)
         {
-            // sample normal map at same atlas pixel
-            vec3 normal = sampleNormalAtPixel(
-                u_NormalsAtlas,
-                pixelCoord,
-                atlasSize,
-                FLIP_ATLAS_Y
-            );
-
-            // screen → world (2D) using camera
-            vec2 frag_world2D = (frag - cameraOffset) / cameraZoom + cameraTarget;
-
-            // use the existing helper to get per-pixel world position
-            vec3 pixelWorldPos = computePixelWorldPos(
-                frag_world2D,
-                worldPosBase, 
-                isFlat
-            );
-
-            vec3 lighting = computeLightingWithNormals(
-                pixelWorldPos,
-                frag,
-                normal,
-                lightCount,
-                lightPositions,
-                lightRadii,
-                lightIntensities,
-                lightColors
-            );
-
-            litSrc = vec4(src.rgb * lighting, src.a);
+            litSrc = lighting(pixelCoord, texelCoord, worldPosBase, isFlat, src, FLIP_ATLAS_Y);
         }
 
         accum = compositeOver(litSrc, accum);

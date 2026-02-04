@@ -4,8 +4,8 @@ bool fragOutsideQuad(vec2 f, vec2 a, vec2 b) {
     return f.x < a.x || f.x > b.x || f.y < a.y || f.y > b.y;
 }
 
-vec2 computeLocalUV(vec2 f, vec2 a, vec2 b) {
-    return (f - a) / (b - a);
+vec2 computeLocalUV(vec2 frag, vec2 minB, vec2 maxB) {
+    return (frag - minB) / (maxB - minB);
 }
 
 vec2 pixelCoordFromLocal(vec2 o, vec2 s, vec2 l, vec2 vo, vec2 vs) {
@@ -44,7 +44,7 @@ vec3 sampleNormalAtPixel(sampler2D n, vec2 p, vec2 sz, bool flipY) {
 }
 
 vec3 computeLightingWithNormals(
-    vec3 wp, vec2 frag, vec3 N,
+    vec3 wp, vec3 N,
     int lc,
     vec3 lp[8], float lr[8], float li[8], vec3 lc0[8])
 {
@@ -69,14 +69,27 @@ vec3 computeLightingWithNormals(
 }
 
 vec3 computePixelWorldPos(
-    vec2 fw,
-    vec3 wp, bool isFlat)
-{
-    vec3 b = wp;
-    return (isFlat)
-        ? vec3(fw.x, fw.y, b.z)
-        : vec3(fw.x, b.y, fw.y);
+    vec2 texelCoord,      // pixel inside sprite, in texels
+    vec3 spriteWorldPos,  // bottom-left-front of sprite
+    bool isFlat
+){
+    if (isFlat) {
+        // flat on ground
+        return vec3(
+            spriteWorldPos.x + texelCoord.x,
+            spriteWorldPos.y + texelCoord.y,
+            spriteWorldPos.z
+        );
+    } else {
+        // vertical billboard
+        return vec3(
+            spriteWorldPos.x + texelCoord.x,
+            spriteWorldPos.y,
+            spriteWorldPos.z + texelCoord.y
+        );
+    }
 }
+
 
 // Convert (spriteIndex, rowIndex) to texel coordinates
 const int ROWS_PER_SPRITE   = 8;              // or whatever you use

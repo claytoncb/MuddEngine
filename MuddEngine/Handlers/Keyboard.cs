@@ -38,7 +38,7 @@ namespace MuddEngine.MuddEngine
         // Sets DebugMode to 1, 2, or 3 when those keys are pressed (top row or numpad)
         private static void UpdateDebugMode()
         {
-            if (Raylib.IsKeyPressed(KeyboardKey.One) || Raylib.IsKeyPressed(KeyboardKey.Kp0))
+            if (Raylib.IsKeyPressed(KeyboardKey.Zero) || Raylib.IsKeyPressed(KeyboardKey.Kp0))
             {
                 DebugMode = 0;
             }

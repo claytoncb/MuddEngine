@@ -19,6 +19,8 @@ uniform int  debugMode;      // debug mode 1,2,3,4
 uniform vec2 screenSize;     // window size in pixels
 uniform vec2 atlasSize;      // atlas size in pixels (width, height)
 uniform int   muddObjectCount;
+
+uniform vec3 cameraPosition;
 uniform vec2  cameraOffset;
 uniform vec2  cameraTarget;
 uniform float cameraZoom;
@@ -36,12 +38,13 @@ uniform vec3  lightColors[MAX_LIGHTS];
 
 out vec4 finalColor;
 
-
-#include "shader_helpers.fs"
-#include "print.fs"
 // ------------------------------------------------------------
 // helpers are concatenated before this file by ShaderLoader
 // ------------------------------------------------------------
+#include "shader_helpers.fs"
+#include "print.fs"
+#include "lighting.fs"
+#include "showPixelPositions.fs"
 
 void main()
 {
@@ -75,6 +78,7 @@ void main()
 
         // local (0..1) inside the scaled visible quad
         vec2 local = computeLocalUV(frag, minB, maxB);
+        vec2 texelCoord = visibleOffset + floor(local * visibleSize);
 
         if (debugMode == 6)
         {
@@ -126,43 +130,12 @@ void main()
         // --- DebugMode 4: sprite-local X/Y/Z visualization ---
         if (debugMode == 4)
         {
-            //vec3 offs = computeSpriteLocalOffsets(i, local, visibleSizes[i], isFlat);
-            //litSrc = vec4(offs, 1.0);
-            litSrc = vec4(0.0,0.0,0.0, 1.0);
+            litSrc = showPixelPositions(texelCoord, worldPosBase, isFlat);
         }
         // --- DebugMode 0: full lighting using world-space per-pixel positions ---
         if (debugMode == 0)
         {
-            // sample normal map at same atlas pixel
-            vec3 normal = sampleNormalAtPixel(
-                u_NormalsAtlas,
-                pixelCoord,
-                atlasSize,
-                FLIP_ATLAS_Y
-            );
-
-            // screen → world (2D) using camera
-            vec2 frag_world2D = (frag - cameraOffset) / cameraZoom + cameraTarget;
-
-            // use the existing helper to get per-pixel world position
-            vec3 pixelWorldPos = computePixelWorldPos(
-                frag_world2D,
-                worldPosBase, 
-                isFlat
-            );
-
-            vec3 lighting = computeLightingWithNormals(
-                pixelWorldPos,
-                frag,
-                normal,
-                lightCount,
-                lightPositions,
-                lightRadii,
-                lightIntensities,
-                lightColors
-            );
-
-            litSrc = vec4(src.rgb * lighting, src.a);
+            litSrc = lighting(pixelCoord, texelCoord, worldPosBase, isFlat, src, FLIP_ATLAS_Y);
         }
 
         accum = compositeOver(litSrc, accum);

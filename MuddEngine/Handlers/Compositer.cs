@@ -11,6 +11,7 @@ namespace MuddEngine.MuddEngine
         public Shader Shader;
         public CameraSprite Camera;
 
+        public int locCameraPosition;
         public int locCameraOffset;
         public int locCameraTarget;
         public int locCameraZoom;
@@ -53,6 +54,7 @@ namespace MuddEngine.MuddEngine
             locScreenSize   = Raylib.GetShaderLocation(Shader, "screenSize");
             locObjectCount  = Raylib.GetShaderLocation(Shader, "muddObjectCount");
 
+            locCameraPosition = Raylib.GetShaderLocation(Shader, "cameraPosition");
             locCameraOffset = Raylib.GetShaderLocation(Shader, "cameraOffset");
             locCameraTarget = Raylib.GetShaderLocation(Shader, "cameraTarget");
             locCameraZoom   = Raylib.GetShaderLocation(Shader, "cameraZoom");
@@ -211,6 +213,8 @@ namespace MuddEngine.MuddEngine
             if (locScale != -1)
                 Raylib.SetShaderValue(Shader, locScale, Camera.Camera.Zoom, ShaderUniformDataType.Float);
 
+            if (locCameraPosition != -1)
+                Raylib.SetShaderValue(Shader, locCameraPosition, Camera.Position, ShaderUniformDataType.Vec3);
             if (locCameraOffset != -1)
                 Raylib.SetShaderValue(Shader, locCameraOffset, Camera.Camera.Offset, ShaderUniformDataType.Vec2);
             if (locCameraTarget != -1)
