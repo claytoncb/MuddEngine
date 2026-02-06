@@ -125,6 +125,12 @@ vec3 computeLightingWithNormals(
         // Lambertian diffuse
         float NdotL = max(dot(normal, normalize(toLight)), 0.0);
 
+        // --- NEW: ambient contribution based only on distance ---
+        float ambientFactor = attenuation * 0.12;   // tweak strength here
+        vec3 ambientFromLight = balancedColor * ambientFactor;
+
+        // Accumulate both
+        accumulated += ambientFromLight * lightIntensity[i];
         accumulated += balancedColor * (NdotL * attenuation * lightIntensity[i]);
     }
 
@@ -141,7 +147,7 @@ vec3 computePixelWorldPos(
         // flat on ground
         return vec3(
             spriteWorldPos.x + texelCoord.x,
-            spriteWorldPos.y + texelCoord.y,
+            spriteWorldPos.y + texelCoord.y / isoScaleY,
             spriteWorldPos.z
         );
     } else {
@@ -242,6 +248,7 @@ vec4 lighting(vec2 pixelCoord, vec2 texelCoord, vec3 worldPosBase, bool isFlat, 
         isFlat
     );
 
+
     vec3 lighting = computeLightingWithNormals(
         pixelWorldPos,
         normal,
@@ -305,7 +312,8 @@ void main()
 
         // local (0..1) inside the scaled visible quad
         vec2 local = computeLocalUV(frag, minB, maxB);
-        vec2 texelCoord = visibleOffset + local * frameSize;
+        vec2 texelCoord = visibleOffset + local * visibleSize;
+        texelCoord = floor(texelCoord);
 
         if (debugMode == 6)
         {

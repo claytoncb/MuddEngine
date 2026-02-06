@@ -9,6 +9,7 @@ namespace MuddEngine.MuddEngine
         private static KeyboardKey lastHorizontal;
         private static KeyboardKey lastVertical;
         public static int DebugMode = 0;
+        public static int scrollLocation = 8;
 
         public static void KeyDown(object sender, KeyEventArgs e)
         {
@@ -26,6 +27,18 @@ namespace MuddEngine.MuddEngine
         {
             UpdateDirectionMemory();
             UpdateDebugMode();
+            UpdateScrollLocation();
+        }
+        private static void UpdateScrollLocation()
+        {
+            float wheel = Raylib.GetMouseWheelMove();
+
+            if (wheel > 0)
+                scrollLocation++;
+            else if (wheel < 0)
+                scrollLocation--;
+
+            scrollLocation = Math.Clamp(scrollLocation, 4, 16);
         }
 
         public static void UpdateDirectionMemory()

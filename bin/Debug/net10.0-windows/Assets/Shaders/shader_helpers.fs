@@ -81,6 +81,12 @@ vec3 computeLightingWithNormals(
         // Lambertian diffuse
         float NdotL = max(dot(normal, normalize(toLight)), 0.0);
 
+        // --- NEW: ambient contribution based only on distance ---
+        float ambientFactor = attenuation * 0.12;   // tweak strength here
+        vec3 ambientFromLight = balancedColor * ambientFactor;
+
+        // Accumulate both
+        accumulated += ambientFromLight * lightIntensity[i];
         accumulated += balancedColor * (NdotL * attenuation * lightIntensity[i]);
     }
 
@@ -97,7 +103,7 @@ vec3 computePixelWorldPos(
         // flat on ground
         return vec3(
             spriteWorldPos.x + texelCoord.x,
-            spriteWorldPos.y + texelCoord.y,
+            spriteWorldPos.y + texelCoord.y / isoScaleY,
             spriteWorldPos.z
         );
     } else {

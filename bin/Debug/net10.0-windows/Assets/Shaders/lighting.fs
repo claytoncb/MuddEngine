@@ -15,6 +15,7 @@ vec4 lighting(vec2 pixelCoord, vec2 texelCoord, vec3 worldPosBase, bool isFlat, 
         isFlat
     );
 
+
     vec3 lighting = computeLightingWithNormals(
         pixelWorldPos,
         normal,

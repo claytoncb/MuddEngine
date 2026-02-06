@@ -23,17 +23,19 @@ namespace MuddEngine.DemoGame
             player = new Player("Conductor",new Vector3(0,0,0.01f),0.5f);
 
             Camera = new CameraSprite(player, new Vector2(2048, 1024));
+            light1 = new LightSource(new Vector3(-256,0,60f), 300f, 2.0f, new Raylib_cs.Color(255,200,180));
+            light2 = new LightSource(new Vector3(0,0,60f), 300f, 2.0f, new Raylib_cs.Color(255,200,180));
+            light3 = new LightSource(new Vector3(256,0,60f), 300f, 2.0f, new Raylib_cs.Color(255,200,180));
 
-            light1 = new LightSource(new Vector3(128,0,100f), 400f,2.0f, new Raylib_cs.Color(80,122,255));
-            light2 = new LightSource(new Vector3(512,0,100f), 400f, 2.0f, new Raylib_cs.Color(250,100,100));
-            light3 = new LightSource(new Vector3(-128,0,100f), 400f, 2.0f, new Raylib_cs.Color(40,250,150));
-            light4 = new LightSource(new Vector3(-512,0,100f), 400f, 2.0f, new Raylib_cs.Color(255,255,255));
+            light4 = new LightSource(new Vector3(512,16,40f), 100f, 1.0f, new Raylib_cs.Color(255,0,0));
+            
+            
             for (int j = 0; j < 2; j++)
             {
-                for (int i = 0; i < 64; i++)
+                for (int i = 0; i < 32; i++)
                 {
-                    Sprite Tile = new Sprite($"Tile{i}-{j}",new Vector3(-768 + 32*i,32 - 32*j,0),0);
-                    Tile.SheetLocation = new((j==0?32:0) + (i==0?128:0) + (i==63?64:0),576);
+                    Sprite Tile = new Sprite($"Tile{i}-{j}",new Vector3(-384 + 32*i,-32*j,0),0);
+                    Tile.SheetLocation = new((j==0?32:0) + (i==0?128:0) + (i==31?64:0),576);
                     Tile.VisibleSize = new(32,16);
                     Tile.VisibleOffset = new(0,7);
                     Tile.isFlat = true;
@@ -44,7 +46,7 @@ namespace MuddEngine.DemoGame
 
         public override void OnUpdate(float dt, float t)
         {
-            //light1.Position.Z = player.Position.Y;
+            Camera.Camera.Zoom = Keyboard.scrollLocation;
         }
         public override void OnDraw() {
         }

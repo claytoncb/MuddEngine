@@ -76,7 +76,8 @@ void main()
 
         // local (0..1) inside the scaled visible quad
         vec2 local = computeLocalUV(frag, minB, maxB);
-        vec2 texelCoord = visibleOffset + local * frameSize;
+        vec2 texelCoord = visibleOffset + local * visibleSize;
+        texelCoord = floor(texelCoord);
 
         if (debugMode == 6)
         {
