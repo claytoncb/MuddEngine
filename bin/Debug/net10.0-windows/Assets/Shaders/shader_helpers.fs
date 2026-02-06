@@ -44,29 +44,49 @@ vec3 sampleNormalAtPixel(sampler2D n, vec2 p, vec2 sz, bool flipY) {
 }
 
 vec3 computeLightingWithNormals(
-    vec3 wp, vec3 N,
-    int lc,
-    vec3 lp[8], float lr[8], float li[8], vec3 lc0[8])
-{
-    vec3 r = vec3(0.02);
-    for (int i = 0; i < lc; ++i) {
-        vec3 L = lp[i] - wp;
-        float d = length(L);
-        if (d <= 0.0001) continue;
-        float rad = lr[i];
-        if (rad > 0.0 && d > rad) continue;
+    vec3 worldPos,
+    vec3 normal,
+    int lightCount,
+    vec3 lightPos[8],
+    float lightRadius[8],
+    float lightIntensity[8],
+    vec3 lightColorSRGB[8]
+){
+    vec3 accumulated = vec3(0.02);   // ambient floor
 
-        vec3 lin = pow(lc0[i], vec3(2.2));
-        float lum = dot(lin, vec3(0.2126,0.7152,0.0722));
-        float f = lum < 0.0001 ? 1.0 : clamp(1.0/lum, 0.5, 2.0);
-        vec3 col = pow(lin * f, vec3(1.0/2.2));
+    for (int i = 0; i < lightCount; ++i)
+    {
+        // Vector from surface → light
+        vec3 toLight = lightPos[i] - worldPos;
+        float dist = length(toLight);
+        if (dist <= 0.0001) continue;
 
-        float att = rad > 0.0 ? (1.0 - d/rad) : 1.0;
-        float ndl = max(dot(N, normalize(L)), 0.0);
-        r += col * (ndl * att * li[i]);
+        float radius = lightRadius[i];
+        if (radius > 0.0 && dist > radius) continue;
+
+        // Convert sRGB → linear
+        vec3 lightColorLinear = pow(lightColorSRGB[i], vec3(2.2));
+
+        // Perceived brightness normalization
+        float luminance = dot(lightColorLinear, vec3(0.2126, 0.7152, 0.0722));
+        float brightnessFactor = (luminance < 0.0001)
+            ? 1.0
+            : clamp(1.0 / luminance, 0.5, 2.0);
+
+        vec3 balancedColor = pow(lightColorLinear * brightnessFactor, vec3(1.0 / 2.2));
+
+        // Attenuation (your original linear falloff)
+        float attenuation = (radius > 0.0) ? (1.0 - dist / radius) : 1.0;
+
+        // Lambertian diffuse
+        float NdotL = max(dot(normal, normalize(toLight)), 0.0);
+
+        accumulated += balancedColor * (NdotL * attenuation * lightIntensity[i]);
     }
-    return clamp(r, 0.0, 4.0);
+
+    return clamp(accumulated, 0.0, 4.0);
 }
+
 
 vec3 computePixelWorldPos(
     vec2 texelCoord,      // pixel inside sprite, in texels

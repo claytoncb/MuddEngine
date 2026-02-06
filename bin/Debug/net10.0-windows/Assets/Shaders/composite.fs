@@ -37,7 +37,8 @@ uniform float lightIntensities[MAX_LIGHTS];
 uniform vec3  lightColors[MAX_LIGHTS];
 
 out vec4 finalColor;
-
+const bool FLIP_ATLAS_Y = true;
+const float isoScaleY = 0.5;
 // ------------------------------------------------------------
 // helpers are concatenated before this file by ShaderLoader
 // ------------------------------------------------------------
@@ -52,9 +53,6 @@ void main()
 
     vec2 frag = gl_FragCoord.xy;
     vec4 accum = vec4(0.0);
-
-    // flipY flag: true because your atlas is top-left authored and you flip before texelFetch
-    const bool FLIP_ATLAS_Y = true;
 
     for (int i = 0; i < muddObjectCount; ++i)
     {
@@ -78,7 +76,7 @@ void main()
 
         // local (0..1) inside the scaled visible quad
         vec2 local = computeLocalUV(frag, minB, maxB);
-        vec2 texelCoord = visibleOffset + floor(local * visibleSize);
+        vec2 texelCoord = visibleOffset + local * frameSize;
 
         if (debugMode == 6)
         {
