@@ -39,8 +39,8 @@ namespace MuddEngine.MuddEngine
         private int locSpriteData;
         private int locMaxSprites;
 
-        private const int MAX_MUDD_OBJECTS = 128;
-        private const int MAX_LIGHTS       = 8;
+        private const int MAX_MUDD_OBJECTS = 512;
+        private const int MAX_LIGHTS       = 16;
 
         public Compositer()
         {

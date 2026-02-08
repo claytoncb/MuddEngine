@@ -27,7 +27,7 @@ uniform float cameraZoom;
 
 
 
-const int MAX_LIGHTS = 8;
+const int MAX_LIGHTS = 16;
 
 // Light uniforms (must match C# sizes)
 uniform int   lightCount;

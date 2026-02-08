@@ -27,7 +27,7 @@ uniform float cameraZoom;
 
 
 
-const int MAX_LIGHTS = 8;
+const int MAX_LIGHTS = 16;
 
 // Light uniforms (must match C# sizes)
 uniform int   lightCount;
@@ -52,12 +52,12 @@ vec2 computeLocalUV(vec2 frag, vec2 minB, vec2 maxB) {
     return (frag - minB) / (maxB - minB);
 }
 
-vec2 pixelCoordFromLocal(vec2 o, vec2 s, vec2 l, vec2 vo, vec2 vs) {
-    return o + s + vo + l * vs;
+vec2 pixelCoordFromLocal(vec2 atlasOrigin, vec2 sheetLocation, vec2 local, vec2 visibleOffset, vec2 visibleSize) {
+    return atlasOrigin + sheetLocation + visibleOffset + local * visibleSize;
 }
 
 vec4 fetchAtlasTexel(sampler2D atlas, vec2 p, vec2 sz, bool flipY) {
-    if (flipY) p.y = sz.y - 1.0 - p.y;
+    if (flipY) p.y = sz.y - p.y;
     ivec2 t = clamp(ivec2(p), ivec2(0), ivec2(sz) - ivec2(1));
     return texelFetch(atlas, t, 0);
 }
@@ -91,10 +91,10 @@ vec3 computeLightingWithNormals(
     vec3 worldPos,
     vec3 normal,
     int lightCount,
-    vec3 lightPos[8],
-    float lightRadius[8],
-    float lightIntensity[8],
-    vec3 lightColorSRGB[8]
+    vec3 lightPos[MAX_LIGHTS],
+    float lightRadius[MAX_LIGHTS],
+    float lightIntensity[MAX_LIGHTS],
+    vec3 lightColorSRGB[MAX_LIGHTS]
 ){
     vec3 accumulated = vec3(0.02);   // ambient floor
 
@@ -126,7 +126,7 @@ vec3 computeLightingWithNormals(
         float NdotL = max(dot(normal, normalize(toLight)), 0.0);
 
         // --- NEW: ambient contribution based only on distance ---
-        float ambientFactor = attenuation * 0.12;   // tweak strength here
+        float ambientFactor = attenuation * 0.15;   // tweak strength here
         vec3 ambientFromLight = balancedColor * ambientFactor;
 
         // Accumulate both

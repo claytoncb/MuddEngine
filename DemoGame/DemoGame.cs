@@ -1,46 +1,42 @@
-using System.Media;
 using System.Numerics;
-using System.Security.Principal;
 using MuddEngine.MuddEngine;
-using Raylib_cs;
 
 namespace MuddEngine.DemoGame
 {
     class DemoGame : MuddEngine.MuddEngine
     {
         Player player;
-        LightSource light1;
-        Sprite ceilingLight1;
-        LightSource light2;
-        Sprite ceilingLight2;
-        LightSource light3;
-        Sprite ceilingLight3;
-        LightSource light4;
-        Sprite ceilingLight4;
         public DemoGame() : base("test",new Vector2(2048,1024)) {}
         public override void OnLoad()
         {
             player = new Player("Conductor",new Vector3(0,0,0.01f),0.5f);
 
-            Camera = new CameraSprite(player, new Vector2(2048, 1024));
-            light1 = new LightSource(new Vector3(-256,0,60f), 300f, 2.0f, new Raylib_cs.Color(255,200,180));
-            light2 = new LightSource(new Vector3(0,0,60f), 300f, 2.0f, new Raylib_cs.Color(255,200,180));
-            light3 = new LightSource(new Vector3(256,0,60f), 300f, 2.0f, new Raylib_cs.Color(255,200,180));
-
-            light4 = new LightSource(new Vector3(512,16,40f), 100f, 1.0f, new Raylib_cs.Color(255,0,0));
+            Camera = new CameraSprite(player, new Vector2(2048, 1024));            
             
-            
-            for (int j = 0; j < 2; j++)
-            {
-                for (int i = 0; i < 32; i++)
+            for (int i = 0; i < 17; i++)
                 {
-                    Sprite Tile = new Sprite($"Tile{i}-{j}",new Vector3(-384 + 32*i,-32*j,0),0);
-                    Tile.SheetLocation = new((j==0?32:0) + (i==0?128:0) + (i==31?64:0),576);
-                    Tile.VisibleSize = new(32,16);
-                    Tile.VisibleOffset = new(0,7);
-                    Tile.isFlat = true;
+                    _ = new Sprite($"Tile{i}", new Vector3(-256 + 32 * i, -32, 0), 0)
+                    {
+                        SheetLocation = new (i==0?64:(i==16?32:0), 576),
+                        VisibleSize = new(32, 32),
+                        isFlat = true
+                    };
+                    _ = new Sprite($"WallBottom{i}", new Vector3(-256 + 32 * i, 32, 0), 0)
+                    {
+                        SheetLocation = new (32*(i%4==0?1:(i%4==1 || i%4==3)?2:0)*2, 608),
+                        VisibleSize = new(32, 32),
+                    };
+                    _ = new Sprite($"WallTop{i}", new Vector3(-256 + 32 * i, 32, 32), 0)
+                    {
+                        SheetLocation = new (32*(i%4==0?1:(i%4==1 || i%4==3)?2:0)*2+32, 608),
+                        VisibleSize = new(32, 32),
+                    };
+                    if (i%4==1 || i%4==3)
+                    {
+                        _ = new LightSource(new Vector3(-256 + 15.5f + 32 * i, 31, 38.5f), 72f, 1.0f, new Raylib_cs.Color(255, 200, 100));
+                        _ = new LightSource(new Vector3(-256 + 15.5f + 32 * i, -31, 38.5f), 72f, 1.0f, new Raylib_cs.Color(255, 200, 100));
+                    }
                 }
-            }
         }
 
 
