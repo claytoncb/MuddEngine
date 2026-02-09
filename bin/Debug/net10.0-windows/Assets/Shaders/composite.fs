@@ -44,6 +44,7 @@ const float isoScaleY = 0.5;
 // ------------------------------------------------------------
 #include "shader_helpers.fs"
 #include "print.fs"
+#include "shadows.fs"
 #include "lighting.fs"
 #include "showPixelPositions.fs"
 
@@ -123,7 +124,6 @@ void main()
         if (isTransparent(src))
             continue;
 
-        // If debugMode 4, compute lighting using normals + per-pixel world position
         vec4 litSrc = src;
 
         // --- DebugMode 4: sprite-local X/Y/Z visualization ---
@@ -131,6 +131,26 @@ void main()
         {
             litSrc = showPixelPositions(texelCoord, worldPosBase, isFlat);
         }
+if (debugMode == 7)
+{
+    vec3 pixelWorldPos = computePixelWorldPos(texelCoord, worldPosBase, isFlat);
+    vec3 normal = sampleNormalAtPixel(
+        u_NormalsAtlas,
+        pixelCoord,
+        atlasSize,
+        FLIP_ATLAS_Y
+    );
+
+    float shadowFactor = computeShadowFactor_SingleBlocker(
+        pixelWorldPos,
+        normal,
+        i
+    );
+
+    finalColor = vec4(vec3(1.0 - shadowFactor), 1.0);
+    return;
+}
+
         // --- DebugMode 0: full lighting using world-space per-pixel positions ---
         if (debugMode == 0)
         {

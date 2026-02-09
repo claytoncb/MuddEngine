@@ -7,9 +7,6 @@ namespace MuddEngine.MuddEngine
     {
         public string Tag = "";
         public int Facing = 0;
-        public float Speed = 0;
-        public float MinSpeed = 0;
-        public float Acceleration;
         public float Height = 12f;
         public int Row;
         public bool Upright;
@@ -19,19 +16,11 @@ namespace MuddEngine.MuddEngine
         public float StateChange;
         public int StateIndex = 0;
 
-        public Sprite(string Id, Vector3 Position, float Speed, bool upright=true) : base(Id, Position)
+        public Sprite(string Id, Vector3 Position, bool Upright=true) : base(Id, Position)
         {
             Size = new Vector2(32,32);
             this.Position = Position;
-            this.Speed = Speed;
-            this.Upright = upright;
-            MinSpeed = Speed;
-            Acceleration = 1000f;
-        }
-        public virtual void Update(float dt, float t, Vector3 movement)
-        {
-            Position += new Vector3(movement.X,movement.Y,movement.Z);
-            base.Update(dt,t);
+            this.Upright = Upright;
         }
     }
 }

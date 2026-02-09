@@ -66,10 +66,17 @@ namespace MuddEngine.MuddEngine
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.Black);
                 List<MuddObject> FlatObjects = ObjectHelpers.FlattenObjects(AllObjects);
+
+                List<MuddObject> VisibleObjects = ObjectHelpers.FilterVisible(
+                    FlatObjects,
+                    ScreenSize,
+                    Camera.Camera
+                );
+
                 Compositer.Draw(
                             ScreenSize,
                             AllLights,
-                            FlatObjects,
+                            VisibleObjects,
                             BaseAtlas,
                             NormalAtlas,
                             DepthAtlas,

@@ -79,6 +79,10 @@ namespace MuddEngine.MuddEngine
             {
                 DebugMode = 6;
             }
+            else if (Raylib.IsKeyPressed(KeyboardKey.Seven) || Raylib.IsKeyPressed(KeyboardKey.Kp7))
+            {
+                DebugMode = 7;
+            }
         }
 
         public static Vector2 Direction()
@@ -114,38 +118,9 @@ namespace MuddEngine.MuddEngine
             return input;
 
         }
-        public static Vector3 Movement (Vector2 Direction, Vector3 Movement, float Speed, float Acceleration, float dt)
+        public static bool IsHoldingSpace()
         {
-            
-            float length = Direction.Length();
-            Vector2 Movement2D = new Vector2(Movement.X, Movement.Y);
-            if (length > 0.1f)
-            {
-                Direction /= length;   // normalize
-                Movement2D += Direction * Acceleration * dt;
-                
-            }
-            else
-            {
-                 Movement2D += -Movement2D * Acceleration * dt * .1f;
-            }
-            
-            if (Movement2D.Length() > Speed)
-            {
-                Movement2D = Vector2.Normalize(Movement2D) * Speed;
-            }
-            return new Vector3(Movement2D.X, Movement2D.Y, 0.0f);
-
-        }
-
-        public static Tuple<float, bool> Speed(bool Moving, bool Dashing, float Speed, float SprintSpeed, float Stamina, float DashAcceleration, float dt)
-        {
-            bool holdingSpace = Raylib.IsKeyDown(KeyboardKey.Space);
-            bool hasStamina = Stamina == 100f;
-            if (holdingSpace && hasStamina && Moving) Dashing = true;
-            if (Stamina == 0 || !holdingSpace) Dashing = false;
-            Speed += (Dashing?1f:-1f) * DashAcceleration * dt;
-            return new(Math.Max(Math.Min(Speed,SprintSpeed), holdingSpace?1.001f:1f), Dashing);
+            return Raylib.IsKeyDown(KeyboardKey.Space);
         }
     }
 }
