@@ -87,5 +87,53 @@ namespace MuddEngine.MuddEngine
 
             return result;
         }
+        public static float[] BuildSpriteColumn(object o, CameraSprite Camera)
+            {
+                var obj = (MuddObject)o;   // or your actual type
+                var pos = obj.GetPosition();
+
+                Vector2 world2D      = new Vector2(pos.X, (pos.Y / 2f) + pos.Z);
+                Vector2 screenCenter = Raylib.GetWorldToScreen2D(world2D, Camera.Camera);
+
+                Vector2 scaledFrame = obj.Size * Camera.Camera.Zoom;
+                Vector2 bottomLeft  = screenCenter - scaledFrame * 0.5f;
+
+                float[] col =
+                [
+                    pos.X,
+                    pos.Y,
+                    pos.Z,
+                    0f,
+                    bottomLeft.X,
+                    bottomLeft.Y,
+                    0f,
+                    0f,
+                    obj.Size.X,
+                    obj.Size.Y,
+                    0f,
+                    0f,
+                    obj.SheetLocation.X,
+                    obj.SheetLocation.Y,
+                    0f,
+                    0f,
+                    obj.AtlasOrigin.X,
+                    obj.AtlasOrigin.Y,
+                    0f,
+                    0f,
+                    obj.VisibleOffset.X,
+                    obj.VisibleOffset.Y,
+                    0f,
+                    0f,
+                    obj.VisibleSize.X,
+                    obj.VisibleSize.Y,
+                    0f,
+                    0f,
+                    obj.isFlat ? 1f : 0f,
+                    0f,
+                    0f,
+                    0f,
+                ];
+                            return col;
+            }
     }
 }
