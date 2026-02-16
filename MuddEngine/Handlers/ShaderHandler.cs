@@ -11,6 +11,11 @@ namespace MuddEngine.MuddEngine
     {
         CameraSprite Camera;
         private GBufferPass GBufferPass;
+        private ShadowPass ShadowPass;
+        private LightingPass LightingPass;
+        private SpriteCompositePass SpriteCompositePass;
+        private ParticlePass ParticlePass;
+        private FinalComposite FinalComposite;
         public Compositer Compositer;
         private RenderTexture2D GBufferTexture;
         public const int ROWS_PER_SPRITE  = 8;
@@ -19,19 +24,32 @@ namespace MuddEngine.MuddEngine
         public ShaderHandler(Vector2 screenSize)
         {
             GBufferPass = new();
-            Compositer = new();
             GBufferTexture = Raylib.LoadRenderTexture((int)screenSize.X, (int)screenSize.Y * 4);
+            ShadowPass = new();
+            LightingPass = new();
+            SpriteCompositePass = new();
+            ParticlePass = new();
+            FinalComposite = new();
+            
         }
         public void Load(CameraSprite Camera)
         {
             this.Camera = Camera;
             GBufferPass.Load(Camera);
-            Compositer.Load(Camera);
+            ShadowPass.Load(Camera);
+            LightingPass.Load(Camera);
+            SpriteCompositePass.Load(Camera);
+            ParticlePass.Load(Camera);
+            FinalComposite.Load(Camera);
         }
         public void UnLoad()
         {
             GBufferPass.UnLoad();
-            Compositer.UnLoad();
+            ShadowPass.UnLoad();
+            LightingPass.UnLoad();
+            SpriteCompositePass.UnLoad();
+            ParticlePass.UnLoad();
+            FinalComposite.UnLoad();
         }
         public void Draw(
             Vector2 screenSize,
@@ -52,7 +70,6 @@ namespace MuddEngine.MuddEngine
             Raylib.BeginTextureMode(GBufferTexture);
             Raylib.ClearBackground(Color.Black);
             Vector2 renderTargetSize = new Vector2(GBufferTexture.Texture.Width, GBufferTexture.Texture.Height);
-
             GBufferPass.Draw(
                 renderTargetSize,
                 lights,
@@ -62,25 +79,29 @@ namespace MuddEngine.MuddEngine
                 depthAtlas,
                 Keyboard.DebugMode
             );
-
+            ShadowPass.Draw();
+            LightingPass.Draw();
+            SpriteCompositePass.Draw();
+            ParticlePass.Draw();
+            FinalComposite.Draw();
             Raylib.EndTextureMode();
-            if (Keyboard.DebugMode == 1)
+            Raylib.BeginDrawing();
+            Raylib.ClearBackground(Color.Black);
+            switch(Keyboard.DebugMode)
             {
-                Raylib.BeginDrawing();
-                Raylib.ClearBackground(Color.Black);
-                Rectangle src = new Rectangle(0, 0, GBufferTexture.Texture.Width, -GBufferTexture.Texture.Height);
-                Rectangle dst = new Rectangle(0, 0, screenSize.X, screenSize.Y);
-                Vector2 origin = new Vector2(0, 0);
-                Raylib.DrawTexturePro(GBufferTexture.Texture, src, dst, origin, 0.0f, Color.White);
-                Raylib.DrawText($"Debug Mode: {Keyboard.DebugMode}", 10, 10, 20, Color.White);
-                Raylib.EndDrawing();
+                case 0:
+                break;
+                case 1:
+                    Rectangle src = new Rectangle(0, 0, GBufferTexture.Texture.Width, -GBufferTexture.Texture.Height);
+                    Rectangle dst = new Rectangle(0, 0, screenSize.X, screenSize.Y);
+                    Vector2 origin = new Vector2(0, 0);
+                    Raylib.DrawTexturePro(GBufferTexture.Texture, src, dst, origin, 0.0f, Color.White);
+                break;
+                default:
+                break;
             }
-            else
-            {
-                Raylib.BeginDrawing();
-                Raylib.ClearBackground(Color.Black);
-                Raylib.EndDrawing();
-            }
+            Raylib.DrawText($"Debug Mode: {Keyboard.DebugMode}", 10, 10, 20, Color.White);
+            Raylib.EndDrawing();
         }
     }
 }

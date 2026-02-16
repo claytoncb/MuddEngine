@@ -6,7 +6,7 @@ using Image = Raylib_cs.Image;
 
 namespace MuddEngine.MuddEngine
 {
-    public class SpriteCompositePass
+    public class FinalComposite
     {
         public Shader Shader;
         public CameraSprite Camera;
