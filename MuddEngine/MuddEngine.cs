@@ -18,7 +18,7 @@ namespace MuddEngine.MuddEngine
         public Texture2D BaseAtlas;
         public Texture2D NormalAtlas;
         public Texture2D DepthAtlas;
-        public Compositer Compositer;
+        public ShaderHandler ShaderHandler;
 
         public MuddEngine(string title, Vector2 screenSize)
         {
@@ -32,14 +32,14 @@ namespace MuddEngine.MuddEngine
             Raylib.SetTextureFilter(BaseAtlas, TextureFilter.Point);
             Raylib.SetTextureFilter(NormalAtlas, TextureFilter.Point);
             Raylib.SetTextureFilter(DepthAtlas, TextureFilter.Point);
-            Compositer = new Compositer();
+            ShaderHandler = new ShaderHandler(ScreenSize);
 
             OnLoad();
-            Compositer.OnLoad(Camera);
+            ShaderHandler.Load(Camera);
             Stopwatch.Start();
             GameLoop();
 
-            Raylib.UnloadShader(Compositer.Shader);
+            ShaderHandler.UnLoad();
             Raylib.CloseWindow();
         }
         public static void RegisterObject(MuddObject muddObject) => AllObjects.Add(muddObject);
@@ -63,8 +63,6 @@ namespace MuddEngine.MuddEngine
                 Camera.Update(dt, t);     
                 Keyboard.Update();              
                     
-                Raylib.BeginDrawing();
-                Raylib.ClearBackground(Color.Black);
                 List<MuddObject> FlatObjects = ObjectHelpers.FlattenObjects(AllObjects);
 
                 List<MuddObject> VisibleObjects = ObjectHelpers.FilterVisible(
@@ -73,17 +71,14 @@ namespace MuddEngine.MuddEngine
                     Camera.Camera
                 );
 
-                Compositer.Draw(
+                ShaderHandler.Draw(
                             ScreenSize,
                             AllLights,
                             VisibleObjects,
                             BaseAtlas,
                             NormalAtlas,
-                            DepthAtlas,
-                            Keyboard.DebugMode
+                            DepthAtlas
                         );
-
-                Raylib.EndDrawing();
             }
         }
         public abstract void OnLoad();

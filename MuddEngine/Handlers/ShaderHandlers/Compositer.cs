@@ -67,11 +67,14 @@ namespace MuddEngine.MuddEngine
             spriteDataTex = BufferHelper.CreateImage(MAX_MUDD_OBJECTS, ROWS_PER_SPRITE);
         }
 
-        public void OnLoad(CameraSprite camera)
+        public void Load(CameraSprite camera)
         {
             Camera = camera;
         }
-
+        public void UnLoad()
+        {
+            Raylib.UnloadShader(Shader);
+        }
         public void Draw(
             Vector2 screenSize,
             List<LightSource> lights,

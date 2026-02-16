@@ -18,7 +18,6 @@ namespace MuddEngine.DemoGame
                     };
 
             Camera = new CameraSprite(player, new Vector2(2048, 1024));            
-            
             for (int i = 0; i < 17; i++)
                 {
                     _ = new Sprite($"FloorTop{i}", new Vector3(-256 + 32 * i, 32, 0))

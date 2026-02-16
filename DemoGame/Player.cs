@@ -40,7 +40,6 @@ namespace MuddEngine.DemoGame
 
             // 4. Update position
             Position += Velocity * dt;
-Console.WriteLine(Velocity);
             // Animation
             FrameHandler(t, direction);
 

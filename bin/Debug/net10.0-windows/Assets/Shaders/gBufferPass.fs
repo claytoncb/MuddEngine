@@ -42,18 +42,17 @@ const float isoScaleY = 0.5;
 // ------------------------------------------------------------
 // helpers are concatenated before this file by ShaderLoader
 // ------------------------------------------------------------
-#include "shader_helpers.fs"
-#include "print.fs"
-#include "shadows.fs"
-#include "lighting.fs"
-#include "showPixelPositions.fs"
+#include "gBufferHelpers.fs"
+#include "dataTextureHelpers.fs"
 
 void main()
 {
     if (muddObjectCount <= 0) discard;
-
     vec2 frag = gl_FragCoord.xy;
-
+    int layer = int(floor((frag.y / screenSize.y) * 4));
+    frag.y = mod(frag.y, screenSize.y/4);
+    
+    
     for (int i = 0; i < muddObjectCount; ++i)
     {
         vec3 worldPosBase       = readVec3(u_SpriteData, i, 0);
@@ -79,13 +78,8 @@ void main()
         vec2 texelCoord = visibleOffset + local * visibleSize;
         texelCoord = floor(texelCoord);
 
-        if (debugMode == 6)
-        {
-            finalColor = print();
-            return;
-        }
         if (fragOutsideQuad(frag, minB, maxB) && debugMode != 6) continue;
-
+        
         // pixel-space coordinate inside the atlas (unflipped)
         vec2 pixelCoord = pixelCoordFromLocal(
             atlasOrigin,
@@ -94,69 +88,13 @@ void main()
             visibleOffset,
             visibleSize
         );
-
-        // choose atlas based on debugMode
-        vec4 src;
-        if (debugMode == 1)
-        {
-            src = fetchAtlasTexel(u_BaseAtlas, pixelCoord, atlasSize, FLIP_ATLAS_Y);
-        }
-        else if (debugMode == 2)
-        {
-            src = fetchAtlasTexel(u_NormalsAtlas, pixelCoord, atlasSize, FLIP_ATLAS_Y);
-        }
-        else if (debugMode == 3)
-        {
-            src = fetchAtlasTexel(u_DepthAtlas, pixelCoord, atlasSize, FLIP_ATLAS_Y);
-        }
-        else if (debugMode == 4)
-        {
-            // base color always sampled from base atlas for lighting
-            src = fetchAtlasTexel(u_BaseAtlas, pixelCoord, atlasSize, FLIP_ATLAS_Y);
-        }
-        else
-        {
-            // default to base atlas if debugMode is out of range
-            src = fetchAtlasTexel(u_BaseAtlas, pixelCoord, atlasSize, FLIP_ATLAS_Y);
-        }
-
+        vec4 src= fetchAtlasTexel(u_BaseAtlas, pixelCoord, atlasSize, FLIP_ATLAS_Y);
         if (isTransparent(src))
             continue;
-
-        vec4 litSrc = src;
-
-        // --- DebugMode 4: sprite-local X/Y/Z visualization ---
-        if (debugMode == 4)
-        {
-            litSrc = showPixelPositions(texelCoord, worldPosBase, isFlat);
-        }
-        if (debugMode == 7)
-        {
-            vec3 pixelWorldPos = computePixelWorldPos(texelCoord, worldPosBase, isFlat);
-            vec3 normal = sampleNormalAtPixel(
-                u_NormalsAtlas,
-                pixelCoord,
-                atlasSize,
-                FLIP_ATLAS_Y
-            );
-
-            float shadowFactor = computeShadowFactor_SingleBlocker(
-                pixelWorldPos,
-                normal,
-                i
-            );
-
-            finalColor = vec4(vec3(1.0 - shadowFactor), 1.0);
-            return;
-        }
-
-        // --- DebugMode 0: full lighting using world-space per-pixel positions ---
-        if (debugMode == 0)
-        {
-            litSrc = lighting(pixelCoord, texelCoord, worldPosBase, isFlat, src, FLIP_ATLAS_Y);
-        }
-
-        finalColor = litSrc;
+        if (layer == 0) 
+            finalColor = src;
+        else
+            finalColor = vec4(0.0,0.0,0.0,1.0);
         break;
     }
 

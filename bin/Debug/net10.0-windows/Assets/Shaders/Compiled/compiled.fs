@@ -355,7 +355,6 @@ void main()
     if (muddObjectCount <= 0) discard;
 
     vec2 frag = gl_FragCoord.xy;
-    vec4 accum = vec4(0.0);
 
     for (int i = 0; i < muddObjectCount; ++i)
     {
@@ -367,7 +366,7 @@ void main()
         vec2 visibleOffset      = readVec2(u_SpriteData, i, 5);
         vec2 visibleSize        = readVec2(u_SpriteData, i, 6);
         bool isFlat             = readFloat(u_SpriteData, i, 7)>0.5;
-
+        
         // screen-space sizes (scaled by camera zoom)
         vec2 scaledFrame   = frameSize * cameraZoom;
         vec2 scaledVisible = visibleSize * cameraZoom;
@@ -433,25 +432,25 @@ void main()
         {
             litSrc = showPixelPositions(texelCoord, worldPosBase, isFlat);
         }
-if (debugMode == 7)
-{
-    vec3 pixelWorldPos = computePixelWorldPos(texelCoord, worldPosBase, isFlat);
-    vec3 normal = sampleNormalAtPixel(
-        u_NormalsAtlas,
-        pixelCoord,
-        atlasSize,
-        FLIP_ATLAS_Y
-    );
+        if (debugMode == 7)
+        {
+            vec3 pixelWorldPos = computePixelWorldPos(texelCoord, worldPosBase, isFlat);
+            vec3 normal = sampleNormalAtPixel(
+                u_NormalsAtlas,
+                pixelCoord,
+                atlasSize,
+                FLIP_ATLAS_Y
+            );
 
-    float shadowFactor = computeShadowFactor_SingleBlocker(
-        pixelWorldPos,
-        normal,
-        i
-    );
+            float shadowFactor = computeShadowFactor_SingleBlocker(
+                pixelWorldPos,
+                normal,
+                i
+            );
 
-    finalColor = vec4(vec3(1.0 - shadowFactor), 1.0);
-    return;
-}
+            finalColor = vec4(vec3(1.0 - shadowFactor), 1.0);
+            return;
+        }
 
         // --- DebugMode 0: full lighting using world-space per-pixel positions ---
         if (debugMode == 0)
@@ -459,14 +458,10 @@ if (debugMode == 7)
             litSrc = lighting(pixelCoord, texelCoord, worldPosBase, isFlat, src, FLIP_ATLAS_Y);
         }
 
-        accum = compositeOver(litSrc, accum);
-
-        if (accum.a >= 0.999)
-            break;
+        finalColor = litSrc;
+        break;
     }
 
-    if (accum.a <= 0.001)
+    if (finalColor.a <= 0.001)
         discard;
-
-    finalColor = accum;
 }
