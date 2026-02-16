@@ -18,6 +18,7 @@ namespace MuddEngine.MuddEngine
         private FinalComposite FinalComposite;
         public Compositer Compositer;
         private RenderTexture2D GBufferTexture;
+        private RenderTexture2D ShadowTexture;
         public const int ROWS_PER_SPRITE  = 8;
         public const int MAX_MUDD_OBJECTS = 512;
         public const int MAX_LIGHTS       = 16;
@@ -26,6 +27,7 @@ namespace MuddEngine.MuddEngine
             GBufferPass = new();
             GBufferTexture = Raylib.LoadRenderTexture((int)screenSize.X, (int)screenSize.Y * 4);
             ShadowPass = new();
+            ShadowTexture = Raylib.LoadRenderTexture((int)screenSize.X, (int)screenSize.Y);
             LightingPass = new();
             SpriteCompositePass = new();
             ParticlePass = new();
@@ -45,7 +47,9 @@ namespace MuddEngine.MuddEngine
         public void UnLoad()
         {
             GBufferPass.UnLoad();
+            Raylib.UnloadRenderTexture(GBufferTexture);
             ShadowPass.UnLoad();
+            Raylib.UnloadRenderTexture(ShadowTexture);
             LightingPass.UnLoad();
             SpriteCompositePass.UnLoad();
             ParticlePass.UnLoad();
@@ -66,36 +70,49 @@ namespace MuddEngine.MuddEngine
                 [.. muddObjects.Cast<object>()],
                 o => ObjectHelpers.BuildSpriteColumn(o, Camera)
             );
-           
             Raylib.BeginTextureMode(GBufferTexture);
             Raylib.ClearBackground(Color.Black);
             Vector2 renderTargetSize = new Vector2(GBufferTexture.Texture.Width, GBufferTexture.Texture.Height);
             GBufferPass.Draw(
                 renderTargetSize,
-                lights,
-                muddObjects,
+                muddObjects.Count,
+                muddBytes,
                 baseAtlas,
                 normalAtlas,
-                depthAtlas,
-                Keyboard.DebugMode
+                depthAtlas
             );
-            ShadowPass.Draw();
+            Raylib.EndTextureMode();
+            Raylib.BeginTextureMode(ShadowTexture);
+            Raylib.ClearBackground(Color.Black);
+            ShadowPass.Draw(
+                screenSize,
+                lights,
+                muddObjects.Count,
+                muddBytes,
+                GBufferTexture,
+                baseAtlas
+            );
+            Raylib.EndTextureMode();
             LightingPass.Draw();
             SpriteCompositePass.Draw();
             ParticlePass.Draw();
             FinalComposite.Draw();
-            Raylib.EndTextureMode();
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Color.Black);
+            Rectangle dst = new (0, 0, screenSize.X, screenSize.Y);
+            Vector2 origin = new (0, 0);
+            Rectangle src;
             switch(Keyboard.DebugMode)
             {
                 case 0:
                 break;
                 case 1:
-                    Rectangle src = new Rectangle(0, 0, GBufferTexture.Texture.Width, -GBufferTexture.Texture.Height);
-                    Rectangle dst = new Rectangle(0, 0, screenSize.X, screenSize.Y);
-                    Vector2 origin = new Vector2(0, 0);
+                    src = new (0, 0, GBufferTexture.Texture.Width, -GBufferTexture.Texture.Height);
                     Raylib.DrawTexturePro(GBufferTexture.Texture, src, dst, origin, 0.0f, Color.White);
+                break;
+                case 2:
+                    src = new (0, 0, screenSize.X, -screenSize.Y);
+                    Raylib.DrawTexturePro(ShadowTexture.Texture, src, dst, origin, 0.0f, Color.White);
                 break;
                 default:
                 break;

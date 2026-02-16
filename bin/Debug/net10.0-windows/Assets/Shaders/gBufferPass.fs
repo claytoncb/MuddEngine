@@ -5,6 +5,7 @@ uniform sampler2D u_NormalsAtlas;
 uniform sampler2D u_DepthAtlas;
 uniform sampler2D u_SpriteData;
 uniform int u_MaxSprites;
+uniform int u_RowsPerSprite;
 uniform vec2 screenSize;
 uniform vec2 atlasSize;
 uniform int   muddObjectCount;

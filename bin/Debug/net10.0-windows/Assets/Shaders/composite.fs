@@ -28,8 +28,6 @@ uniform float cameraZoom;
 
 
 const int MAX_LIGHTS = 16;
-
-// Light uniforms (must match C# sizes)
 uniform int   lightCount;
 uniform vec3  lightPositions[MAX_LIGHTS];
 uniform float lightRadii[MAX_LIGHTS];

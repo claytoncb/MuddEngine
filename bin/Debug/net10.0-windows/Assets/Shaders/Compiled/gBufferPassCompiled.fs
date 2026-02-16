@@ -5,6 +5,7 @@ uniform sampler2D u_NormalsAtlas;
 uniform sampler2D u_DepthAtlas;
 uniform sampler2D u_SpriteData;
 uniform int u_MaxSprites;
+uniform int u_RowsPerSprite;
 uniform vec2 screenSize;
 uniform vec2 atlasSize;
 uniform int   muddObjectCount;
@@ -14,12 +15,9 @@ out vec4 finalColor;
 const bool FLIP_ATLAS_Y = true;
 const float isoScaleY = 0.5;
 
-// Convert (spriteIndex, rowIndex) to texel coordinates
-const int ROWS_PER_SPRITE   = 8;              // or whatever you use
-
 ivec2 spriteTexelCoord(int spriteIndex, int rowIndex)
 {
-    int linear = spriteIndex * ROWS_PER_SPRITE + rowIndex;
+    int linear = spriteIndex * u_RowsPerSprite + rowIndex;
     int x = linear % u_MaxSprites;
     int y = linear / u_MaxSprites;
     return ivec2(x, y);
