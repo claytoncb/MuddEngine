@@ -1,47 +1,54 @@
 #version 330 core
 
-// ------------------------------------------------------------
-// composite.fs — main composite shader
-// shader_helpers.fs is concatenated before this body.
-// ------------------------------------------------------------
-
-// --- Uniforms ------------------------------------------------
-
 uniform sampler2D u_BaseAtlas;
 uniform sampler2D u_NormalsAtlas;
 uniform sampler2D u_DepthAtlas;
-
-uniform sampler2D u_SpriteData; // RGBA32F data texture (8 x u_MaxSprites)
-uniform int u_MaxSprites;       // equals MAX_MUDD_OBJECTS on the CPU side
-
-
-uniform int  debugMode;      // debug mode 1,2,3,4
-uniform vec2 screenSize;     // window size in pixels
-uniform vec2 atlasSize;      // atlas size in pixels (width, height)
+uniform sampler2D u_SpriteData;
+uniform int u_MaxSprites;
+uniform vec2 screenSize;
+uniform vec2 atlasSize;
 uniform int   muddObjectCount;
-
 uniform vec3 cameraPosition;
-uniform vec2  cameraOffset;
-uniform vec2  cameraTarget;
 uniform float cameraZoom;
-
-
-
-const int MAX_LIGHTS = 16;
-
-// Light uniforms (must match C# sizes)
-uniform int   lightCount;
-uniform vec3  lightPositions[MAX_LIGHTS];
-uniform float lightRadii[MAX_LIGHTS];
-uniform float lightIntensities[MAX_LIGHTS];
-uniform vec3  lightColors[MAX_LIGHTS];
-
 out vec4 finalColor;
 const bool FLIP_ATLAS_Y = true;
 const float isoScaleY = 0.5;
-// ------------------------------------------------------------
-// helpers are concatenated before this file by ShaderLoader
-// ------------------------------------------------------------
+
+// Convert (spriteIndex, rowIndex) to texel coordinates
+const int ROWS_PER_SPRITE   = 8;              // or whatever you use
+
+ivec2 spriteTexelCoord(int spriteIndex, int rowIndex)
+{
+    int linear = spriteIndex * ROWS_PER_SPRITE + rowIndex;
+    int x = linear % u_MaxSprites;
+    int y = linear / u_MaxSprites;
+    return ivec2(x, y);
+}
+
+vec4 readRow(sampler2D tex, int spriteIndex, int rowIndex)
+{
+    return texelFetch(tex, spriteTexelCoord(spriteIndex, rowIndex), 0);
+}
+
+float readFloat(sampler2D tex, int spriteIndex, int rowIndex)
+{
+    return readRow(tex, spriteIndex, rowIndex).r;
+}
+
+vec2 readVec2(sampler2D tex, int spriteIndex, int rowIndex)
+{
+    return readRow(tex, spriteIndex, rowIndex).rg;
+}
+
+vec3 readVec3(sampler2D tex, int spriteIndex, int rowIndex)
+{
+    return readRow(tex, spriteIndex, rowIndex).rgb;
+}
+
+vec4 readVec4(sampler2D tex, int spriteIndex, int rowIndex)
+{
+    return readRow(tex, spriteIndex, rowIndex);
+}
 
 const float EPS_ALPHA = 0.001;
 
@@ -126,95 +133,110 @@ vec4 showPixelPositions(vec2 texelCoord, vec3 worldPosBase, bool isFlat)
 
     return vec4(nx, ny, nz, 1.0);
 }
-// Convert (spriteIndex, rowIndex) to texel coordinates
-const int ROWS_PER_SPRITE   = 8;              // or whatever you use
 
-ivec2 spriteTexelCoord(int spriteIndex, int rowIndex)
-{
-    int linear = spriteIndex * ROWS_PER_SPRITE + rowIndex;
-    int x = linear % u_MaxSprites;
-    int y = linear / u_MaxSprites;
-    return ivec2(x, y);
+vec4 fetchAtlasTexelI(sampler2D atlas, ivec2 p, ivec2 sz, bool flipY) {
+    if (flipY) p.y = sz.y - 1 - p.y;
+    p = clamp(p, ivec2(0), sz - ivec2(1));
+    return texelFetch(atlas, p, 0);
 }
 
-vec4 readRow(sampler2D tex, int spriteIndex, int rowIndex)
-{
-    return texelFetch(tex, spriteTexelCoord(spriteIndex, rowIndex), 0);
+ivec2 atlasISize_i() {
+    return ivec2(atlasSize + 0.5);
 }
 
-float readFloat(sampler2D tex, int spriteIndex, int rowIndex)
-{
-    return readRow(tex, spriteIndex, rowIndex).r;
+void computeFragAndLayer(out ivec2 fragI, out int layer, out vec2 fragF) {
+    fragI = ivec2(gl_FragCoord.xy);
+    ivec2 screenISize = ivec2(screenSize + 0.5);
+    int bandH = max(1, screenISize.y / 4);
+    layer = clamp(fragI.y / bandH, 0, 3);
+    ivec2 fragBandI = ivec2(fragI.x, fragI.y - layer * bandH);
+    fragF = vec2(float(fragBandI.x), float(fragBandI.y));
 }
 
-vec2 readVec2(sampler2D tex, int spriteIndex, int rowIndex)
-{
-    return readRow(tex, spriteIndex, rowIndex).rg;
+void readBounds(int idx, out vec2 spriteBottomLeft, out vec2 visibleOffset, out vec2 visibleSize) {
+    spriteBottomLeft = readVec2(u_SpriteData, idx, 1);
+    visibleOffset    = readVec2(u_SpriteData, idx, 5);
+    visibleSize      = readVec2(u_SpriteData, idx, 6);
 }
 
-vec3 readVec3(sampler2D tex, int spriteIndex, int rowIndex)
-{
-    return readRow(tex, spriteIndex, rowIndex).rgb;
+ivec2 computePixelCoordI_fromLocal(vec2 atlasOrigin, vec2 sheetLocation, vec2 visibleOffset, vec2 visibleSize, vec2 local) {
+    // convert relevant values to integer texel units and clamp local*size to [0..size-1]
+    ivec2 visSizeI      = ivec2(visibleSize + 0.5);
+    ivec2 visOffsetI    = ivec2(visibleOffset + 0.5);
+    ivec2 atlasOriginI  = ivec2(atlasOrigin + 0.5);
+    ivec2 sheetLocationI= ivec2(sheetLocation + 0.5);
+
+    ivec2 texelInSprite = ivec2(floor(local * vec2(visSizeI)));
+    texelInSprite = clamp(texelInSprite, ivec2(0), visSizeI - ivec2(1));
+
+    return atlasOriginI + sheetLocationI + visOffsetI + texelInSprite;
 }
 
-vec4 readVec4(sampler2D tex, int spriteIndex, int rowIndex)
-{
-    return readRow(tex, spriteIndex, rowIndex);
+vec4 sampleAtlasLayer(int layer, ivec2 pixelCoordI, ivec2 atlasISize) {
+    switch (layer) {
+        case 0: return fetchAtlasTexelI(u_BaseAtlas, pixelCoordI, atlasISize, FLIP_ATLAS_Y);
+        case 1: return fetchAtlasTexelI(u_NormalsAtlas, pixelCoordI, atlasISize, FLIP_ATLAS_Y);
+        case 2: return fetchAtlasTexelI(u_DepthAtlas, pixelCoordI, atlasISize, FLIP_ATLAS_Y);
+        default: return vec4(0.0, 0.0, 0.0, 1.0);
+    }
 }
+
+ivec2 computeTexelCoordI_forWorld(vec2 visibleOffset, vec2 visibleSize, vec2 local) {
+    ivec2 visSizeI   = ivec2(visibleSize + 0.5);
+    ivec2 visOffsetI = ivec2(visibleOffset + 0.5);
+    ivec2 texelInSprite = ivec2(floor(local * vec2(visSizeI)));
+    texelInSprite = clamp(texelInSprite, ivec2(0), visSizeI - ivec2(1));
+    return visOffsetI + texelInSprite;
+}
+
+
 
 void main()
 {
     if (muddObjectCount <= 0) discard;
-    vec2 frag = gl_FragCoord.xy;
-    int layer = int(floor((frag.y / screenSize.y) * 4));
-    frag.y = mod(frag.y, screenSize.y/4);
-    
-    
-    for (int i = 0; i < muddObjectCount; ++i)
-    {
-        vec3 worldPosBase       = readVec3(u_SpriteData, i, 0);
-        vec2 spriteBottomLeft   = readVec2(u_SpriteData, i, 1);
-        vec2 frameSize          = readVec2(u_SpriteData, i, 2);
-        vec2 sheetLocation      = readVec2(u_SpriteData, i, 3);
-        vec2 atlasOrigin        = readVec2(u_SpriteData, i, 4);
-        vec2 visibleOffset      = readVec2(u_SpriteData, i, 5);
-        vec2 visibleSize        = readVec2(u_SpriteData, i, 6);
-        bool isFlat             = readFloat(u_SpriteData, i, 7)>0.5;
-        
-        // screen-space sizes (scaled by camera zoom)
-        vec2 scaledFrame   = frameSize * cameraZoom;
+
+    ivec2 atlasISize = atlasISize_i();
+
+    ivec2 fragI;
+    int layer;
+    vec2 frag;
+    computeFragAndLayer(fragI, layer, frag);
+
+    for (int i = 0; i < muddObjectCount; ++i) {
+        // bounds test (minimal pre-reads)
+        vec2 spriteBottomLeft, visibleOffset, visibleSize;
+        readBounds(i, spriteBottomLeft, visibleOffset, visibleSize);
+
         vec2 scaledVisible = visibleSize * cameraZoom;
         vec2 scaledOffset  = visibleOffset * cameraZoom;
-
-        // quad bounds for the visible rect inside the frame
         vec2 minB = spriteBottomLeft + scaledOffset;
         vec2 maxB = minB + scaledVisible;
+        if (fragOutsideQuad(frag, minB, maxB)) continue;
 
-        // local (0..1) inside the scaled visible quad
+        // atlas placement and local UV
+        vec2 sheetLocation = readVec2(u_SpriteData, i, 3);
+        vec2 atlasOrigin   = readVec2(u_SpriteData, i, 4);
         vec2 local = computeLocalUV(frag, minB, maxB);
-        vec2 texelCoord = visibleOffset + local * visibleSize;
-        texelCoord = floor(texelCoord);
 
-        if (fragOutsideQuad(frag, minB, maxB) && debugMode != 6) continue;
-        
-        // pixel-space coordinate inside the atlas (unflipped)
-        vec2 pixelCoord = pixelCoordFromLocal(
-            atlasOrigin,
-            sheetLocation,
-            local,
-            visibleOffset,
-            visibleSize
-        );
-        vec4 src= fetchAtlasTexel(u_BaseAtlas, pixelCoord, atlasSize, FLIP_ATLAS_Y);
-        if (isTransparent(src))
-            continue;
-        if (layer == 0) 
-            finalColor = src;
-        else
-            finalColor = vec4(0.0,0.0,0.0,1.0);
-        break;
+        // integer atlas texel coordinate (maps local==1.0 to last texel)
+        ivec2 pixelCoordI = computePixelCoordI_fromLocal(atlasOrigin, sheetLocation, visibleOffset, visibleSize, local);
+
+        // sample base first (alpha test)
+        vec4 src = fetchAtlasTexelI(u_BaseAtlas, pixelCoordI, atlasISize, FLIP_ATLAS_Y);
+        if (isTransparent(src)) continue;
+
+        // layer-specific output; defer extra reads for layer 3
+        if (layer == 3) {
+            vec3 worldPosBase = readVec3(u_SpriteData, i, 0);
+            bool isFlat = readFloat(u_SpriteData, i, 7) > 0.5;
+            ivec2 texelCoordI = computeTexelCoordI_forWorld(visibleOffset, visibleSize, local);
+            finalColor = showPixelPositions(vec2(texelCoordI), worldPosBase, isFlat);
+        } else {
+            finalColor = sampleAtlasLayer(layer, pixelCoordI, atlasISize);
+        }
+
+        break; // topmost sprite found
     }
 
-    if (finalColor.a <= 0.001)
-        discard;
+    if (finalColor.a <= EPS_ALPHA) discard;
 }

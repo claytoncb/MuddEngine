@@ -64,19 +64,23 @@ namespace MuddEngine.MuddEngine
             );
 
             Raylib.EndTextureMode();
-            Raylib.BeginDrawing();
-            Raylib.ClearBackground(Color.Black);
-
-            // Source rect: width, -height flips the texture vertically
-            Rectangle src = new Rectangle(0, 0, GBufferTexture.Texture.Width, -GBufferTexture.Texture.Height);
-            Rectangle dst = new Rectangle(0, 0, screenSize.X, screenSize.Y);
-            Vector2 origin = new Vector2(0, 0);
-            Raylib.DrawTexturePro(GBufferTexture.Texture, src, dst, origin, 0.0f, Color.White);
-
-            // Optional: debug overlay
-            Raylib.DrawText("Rendered to texture then drawn to screen", 10, 10, 20, Color.White);
-            Raylib.EndDrawing();
-
+            if (Keyboard.DebugMode == 1)
+            {
+                Raylib.BeginDrawing();
+                Raylib.ClearBackground(Color.Black);
+                Rectangle src = new Rectangle(0, 0, GBufferTexture.Texture.Width, -GBufferTexture.Texture.Height);
+                Rectangle dst = new Rectangle(0, 0, screenSize.X, screenSize.Y);
+                Vector2 origin = new Vector2(0, 0);
+                Raylib.DrawTexturePro(GBufferTexture.Texture, src, dst, origin, 0.0f, Color.White);
+                Raylib.DrawText($"Debug Mode: {Keyboard.DebugMode}", 10, 10, 20, Color.White);
+                Raylib.EndDrawing();
+            }
+            else
+            {
+                Raylib.BeginDrawing();
+                Raylib.ClearBackground(Color.Black);
+                Raylib.EndDrawing();
+            }
         }
     }
 }

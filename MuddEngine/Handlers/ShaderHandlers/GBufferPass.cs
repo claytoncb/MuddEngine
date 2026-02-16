@@ -24,17 +24,11 @@ namespace MuddEngine.MuddEngine
         public int locBaseAtlas;
         public int locNormalsAtlas;
         public int locDepthAtlas;
-        public int locLightCount;
-        public int locLightPositions;
-        public int locLightRadii;
-        public int locLightIntensities;
-        public int locLightColors;
         private Texture2D spriteDataTex;
         private const int ROWS_PER_SPRITE = 8;
         private int locSpriteData;
         private int locMaxSprites;
         private const int MAX_MUDD_OBJECTS = 512;
-        private const int MAX_LIGHTS       = 16;
         public GBufferPass()
         {
             Shader = ShaderHelper.ShaderLoader.LoadShaderWithIncludes(
@@ -54,12 +48,6 @@ namespace MuddEngine.MuddEngine
             locBaseAtlas    = Raylib.GetShaderLocation(Shader, "u_BaseAtlas");
             locNormalsAtlas = Raylib.GetShaderLocation(Shader, "u_NormalsAtlas");
             locDepthAtlas   = Raylib.GetShaderLocation(Shader, "u_DepthAtlas");
-
-            locLightCount       = Raylib.GetShaderLocation(Shader, "lightCount");
-            locLightPositions   = Raylib.GetShaderLocation(Shader, "lightPositions");
-            locLightRadii       = Raylib.GetShaderLocation(Shader, "lightRadii");
-            locLightIntensities = Raylib.GetShaderLocation(Shader, "lightIntensities");
-            locLightColors      = Raylib.GetShaderLocation(Shader, "lightColors");
 
             locSpriteData = Raylib.GetShaderLocation(Shader, "u_SpriteData");
             locMaxSprites = Raylib.GetShaderLocation(Shader, "u_MaxSprites");
@@ -88,13 +76,8 @@ namespace MuddEngine.MuddEngine
             if (Camera == null)
                 return;
 
-            int lightCount  = Math.Min(lights?.Count ?? 0, MAX_LIGHTS);
             int objectCount = Math.Min(muddObjects?.Count ?? 0, MAX_MUDD_OBJECTS);
 
-            float[] lightPosArray       = new float[MAX_LIGHTS * 3];
-            float[] lightRadiusArray    = new float[MAX_LIGHTS];
-            float[] lightIntensityArray = new float[MAX_LIGHTS];
-            float[] lightColorArray     = new float[MAX_LIGHTS * 3];
 
             Raylib.BeginShaderMode(Shader);
 
@@ -105,21 +88,6 @@ namespace MuddEngine.MuddEngine
             if (locDepthAtlas != -1 && depthAtlas.Id != 0)
                 Raylib.SetShaderValueTexture(Shader, locDepthAtlas, depthAtlas);
 
-            // Lights
-            for (int i = 0; i < lightCount; i++)
-            {
-                var L = lights[i];
-                lightPosArray[i * 3 + 0] = L.Position.X;
-                lightPosArray[i * 3 + 1] = L.Position.Y;
-                lightPosArray[i * 3 + 2] = L.Position.Z;
-
-                lightRadiusArray[i]    = L.Radius;
-                lightIntensityArray[i] = L.Intensity;
-
-                lightColorArray[i * 3 + 0] = L.Color.R / 255.0f;
-                lightColorArray[i * 3 + 1] = L.Color.G / 255.0f;
-                lightColorArray[i * 3 + 2] = L.Color.B / 255.0f;
-            }
             //Update Sprite Data Texture Bytes
             byte[] spriteBytes = BufferHelper.LoadDataFromObjects(
                 MAX_MUDD_OBJECTS,
@@ -127,21 +95,6 @@ namespace MuddEngine.MuddEngine
                 [.. muddObjects.Cast<object>()],
                 o => ObjectHelpers.BuildSpriteColumn(o, Camera)
             );
-            // Upload light arrays
-            if (locLightCount != -1)
-                Raylib.SetShaderValue(Shader, locLightCount, lightCount, ShaderUniformDataType.Int);
-
-            if (locLightPositions != -1 && lightCount > 0)
-                Raylib.SetShaderValueV(Shader, locLightPositions, lightPosArray, ShaderUniformDataType.Vec3, lightCount);
-
-            if (locLightRadii != -1 && lightCount > 0)
-                Raylib.SetShaderValueV(Shader, locLightRadii, lightRadiusArray, ShaderUniformDataType.Float, lightCount);
-
-            if (locLightIntensities != -1 && lightCount > 0)
-                Raylib.SetShaderValueV(Shader, locLightIntensities, lightIntensityArray, ShaderUniformDataType.Float, lightCount);
-
-            if (locLightColors != -1 && lightCount > 0)
-                Raylib.SetShaderValueV(Shader, locLightColors, lightColorArray, ShaderUniformDataType.Vec3, lightCount);
             
             //Add Sprite Data Texture
             if (locSpriteData != -1)

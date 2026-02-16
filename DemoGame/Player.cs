@@ -22,7 +22,7 @@ namespace MuddEngine.DemoGame
 
             // Movement
             Acceleration = new Vector3(direction.X, direction.Y, 0) * baseAcceleration;
-            HandleDash(dt);
+            HandleDash(dt, direction);
 
             // 1. Apply acceleration
             Velocity += Acceleration * dt;
@@ -80,16 +80,17 @@ namespace MuddEngine.DemoGame
             // Default fallback (no movement)
             return spriteFacing; // or whatever your idle facing is
         }
-        private void HandleDash(float dt)
+        private void HandleDash(float dt, Vector2 direction)
         {
             bool holdingSpace = MuddEngine.Keyboard.IsHoldingSpace();
-            bool moving = Velocity.LengthSquared() > 0.01f;
+            bool hasSpeed = Velocity.LengthSquared() > 0.01f;
+            bool moving = hasSpeed && (direction.LengthSquared() > 0.01f);
             bool hasStamina = Stamina > 0f;
 
             // --- Start dash ---
             if (holdingSpace && moving && hasStamina && (Dashing || (Stamina == MaxStamina)))
                 Dashing = true;
-
+       
             // --- Stop dash ---
             if (!holdingSpace || Stamina <= 0f || !moving)
                 Dashing = false;
